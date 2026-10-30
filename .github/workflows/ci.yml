@@ -24,5 +24,3 @@ jobs:
         run: pytest
       - name: Two-node integration
         run: python scripts/e2e_check.py
-
-
