@@ -1,0 +1,50 @@
+name: Compatibility or deployment report
+description: Report a reproducible demo, hardware or deployment result
+title: "[Deployment]: "
+labels: ["documentation"]
+body:
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - Demo completed successfully
+        - Partial success
+        - Failed
+        - Performance or hardware observation
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, architecture, Python, Docker and relevant hardware; remove secrets.
+      placeholder: Windows 11, x64, Python 3.12, no Docker, 8-core CPU
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Exact commands
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Observed result
+      description: Include the final JSON or non-secret logs and state whether the result was reproducible.
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: Unexpected behavior or blocker
+      description: Leave blank for a successful compatibility report.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data safety
+      options:
+        - label: I removed credentials, private memory and sensitive machine information.
+          required: true
