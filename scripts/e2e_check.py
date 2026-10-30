@@ -45,6 +45,20 @@ def wait_ready(url: str, process: subprocess.Popen[bytes], timeout: float = 20) 
     raise RuntimeError(f"node at {url} did not become ready")
 
 
+def wait_networked(url: str, timeout: float = 30) -> dict[str, object]:
+    deadline = time.time() + timeout
+    last_status: dict[str, object] = {}
+    while time.time() < deadline:
+        try:
+            last_status = request("GET", f"{url}/v1/network/status")
+            if last_status.get("mode") == "networked":
+                return last_status
+        except (OSError, urllib.error.URLError, json.JSONDecodeError):
+            pass
+        time.sleep(0.5)
+    raise RuntimeError(f"node at {url} did not join the mesh: {last_status}")
+
+
 def start_node(
     python: str, root: Path, name: str, port: int, peer_port: int, domain: str
 ) -> subprocess.Popen[bytes]:
@@ -94,9 +108,8 @@ def main() -> None:
         try:
             wait_ready("http://127.0.0.1:18081", a)
             wait_ready("http://127.0.0.1:18082", b)
-            time.sleep(3)
 
-            status = request("GET", "http://127.0.0.1:18082/v1/network/status")
+            status = wait_networked("http://127.0.0.1:18082")
             assert status["mode"] == "networked"
             assert status["online_peer_count"] >= 1
 
