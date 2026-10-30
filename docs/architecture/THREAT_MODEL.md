@@ -1,5 +1,7 @@
 # Architecture Threat Model
 
+[English](THREAT_MODEL.md) | [简体中文](THREAT_MODEL.zh-CN.md)
+
 **Status:** Draft research threat model `v0.1`  
 **Scope:** Invite-only heterogeneous inference, durable memory, virtual roles and continual-learning workflows
 

@@ -1,5 +1,7 @@
 # Architecture Quality Scenarios
 
+[English](QUALITY_SCENARIOS.md) | [简体中文](QUALITY_SCENARIOS.zh-CN.md)
+
 **Status:** Acceptance scenario baseline `v0.1`
 
 These scenarios define observable outcomes for the architecture. A scenario marked **target** is not implemented yet.

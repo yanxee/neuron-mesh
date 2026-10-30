@@ -1,5 +1,7 @@
 # Architecture Decision Log
 
+[English](DECISIONS.md) | [简体中文](DECISIONS.zh-CN.md)
+
 This is a lightweight ADR index for the initial architecture baseline. A future change should add a dedicated record that describes alternatives, evidence, consequences and reversal cost.
 
 | ID | Decision | Status | Consequence |

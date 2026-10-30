@@ -1,5 +1,7 @@
 # Protocol and Interface Contracts
 
+[English](INTERFACE_CONTRACTS.md) | [简体中文](INTERFACE_CONTRACTS.zh-CN.md)
+
 **Status:** Draft architecture contract `v0.1`  
 **Purpose:** Define the minimum versioned objects shared across ingress, planner, workers, registries, memory custodians, role controllers and spatial adapters
 
