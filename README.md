@@ -15,6 +15,18 @@
 
 **Search terms / 搜索关键词：** decentralized AI · distributed inference · large language models · LLM network · peer-to-peer AI · federated learning · continual learning · persistent memory · long-term memory · heterogeneous computing · edge AI · multi-modal AI · OpenAI-compatible API · 去中心化大模型 · 分布式推理 · 联邦学习 · 长期记忆 · 异构算力
 
+## Help build the open network
+
+NeuronMesh is looking for researchers, engineers and protocol reviewers who want to make decentralized AI systems measurable rather than aspirational.
+
+- Start with a scoped task: [Contributor Task Board](docs/CONTRIBUTOR_TASKS.md)
+- Read the [10-minute demo](docs/DEMO.md) and reproduce the two-node test
+- Review the [Roadmap](ROADMAP.md) and propose a reproducible milestone
+- Open a feature request with metrics, baselines and failure modes
+- Share the project using the [honest outreach kit](docs/OUTREACH.md)
+
+High-value areas: distributed systems, LLM serving, memory consolidation, federated learning, privacy, security, chaos testing and WebXR.
+
 ## 为什么是 NeuronMesh？
 
 NeuronMesh 关注的不是再包装一个聊天 API，而是探索大模型基础设施中四个相互关联的问题：计算、记忆、生命周期与互操作。
