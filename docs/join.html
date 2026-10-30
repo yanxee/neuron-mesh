@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Join NeuronMesh — Contribute to a Decentralized LLM Research Network</title>
+  <meta name="description" content="Contribute to NeuronMesh: reproduce a decentralized LLM demo in 10 minutes, claim a scoped issue, benchmark persistent memory or collaborate on peer-to-peer AI systems.">
+  <meta name="keywords" content="decentralized AI contributors, distributed LLM research, open-source AI infrastructure, persistent memory benchmark, peer-to-peer AI, heterogeneous computing">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://yanxee.github.io/neuron-mesh/join.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Join NeuronMesh — Build measurable decentralized AI">
+  <meta property="og:description" content="A 10-minute demo, scoped first issues and reproducible research questions for contributors across AI systems, distributed systems, memory, security and WebXR.">
+  <meta property="og:url" content="https://yanxee.github.io/neuron-mesh/join.html">
+  <meta property="og:site_name" content="NeuronMesh">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Join NeuronMesh",
+    "description": "Contributor entry guide for the NeuronMesh decentralized LLM research project.",
+    "url": "https://yanxee.github.io/neuron-mesh/join.html",
+    "isPartOf": {
+      "@type": "SoftwareSourceCode",
+      "name": "NeuronMesh",
+      "codeRepository": "https://github.com/yanxee/neuron-mesh"
+    }
+  }
+  </script>
+</head>
+<body>
+  <header>
+    <nav aria-label="Primary">
+      <a class="brand" href="/neuron-mesh/">NeuronMesh</a>
+      <div class="nav-links">
+        <a href="/neuron-mesh/">Overview</a>
+        <a href="https://github.com/yanxee/neuron-mesh/discussions">Discussions</a>
+        <a href="https://github.com/yanxee/neuron-mesh">GitHub</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero join-hero">
+      <span class="eyebrow">Open research · contributor entry guide</span>
+      <h1>Bring one useful piece. Leave with a reproducible result.</h1>
+      <p class="lead">
+        You do not need a GPU or a complete AI cluster. Start by reproducing a two-node prototype,
+        fixing one bounded problem or testing a research question against a measurable baseline.
+      </p>
+      <div class="actions">
+        <a class="primary" href="https://github.com/yanxee/neuron-mesh/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">Find a first issue</a>
+        <a class="secondary" href="https://github.com/yanxee/neuron-mesh/blob/main/docs/DEMO.md">Run the 10-minute demo</a>
+      </div>
+      <p class="scope">
+        v0.2.0 is research software. The current network is an invite-only HTTP mesh; P2P transport,
+        cross-node Transformer execution and federated training remain roadmap items.
+      </p>
+    </section>
+
+    <section aria-labelledby="routes-title">
+      <p class="eyebrow">Choose your path</p>
+      <h2 id="routes-title">Use the time and expertise you already have.</h2>
+      <div class="route-grid">
+        <article class="route-card">
+          <span class="route-time">10 minutes</span>
+          <h3>Test compatibility</h3>
+          <p>Run the deterministic two-node demo. Report your OS, CPU architecture and the exact output.</p>
+          <a href="https://github.com/yanxee/neuron-mesh/issues/new?template=deployment_report.yml">Open a compatibility report</a>
+        </article>
+        <article class="route-card">
+          <span class="route-time">30–90 minutes</span>
+          <h3>Ship one scoped fix</h3>
+          <p>Claim a test, Docker, migration or documentation issue with explicit acceptance criteria.</p>
+          <a href="https://github.com/yanxee/neuron-mesh/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">Browse good first issues</a>
+        </article>
+        <article class="route-card">
+          <span class="route-time">One afternoon</span>
+          <h3>Benchmark a question</h3>
+          <p>Compare routing, memory recall, durability or hardware behavior with a published baseline.</p>
+          <a href="https://github.com/yanxee/neuron-mesh/issues/new?template=research_proposal.yml">Propose an experiment</a>
+        </article>
+        <article class="route-card">
+          <span class="route-time">Deep collaboration</span>
+          <h3>Review a subsystem</h3>
+          <p>Work on transport, inference workers, trust, memory semantics, reliability or spatial interfaces.</p>
+          <a href="https://github.com/yanxee/neuron-mesh/blob/main/ROADMAP.md">Inspect the roadmap</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="architecture" aria-labelledby="loop-title">
+      <div>
+        <p class="eyebrow">First contribution</p>
+        <h2 id="loop-title">A short loop with visible evidence.</h2>
+      </div>
+      <ol class="steps">
+        <li><strong>Choose.</strong> Pick an issue or post a concrete proposal in Discussions.</li>
+        <li><strong>Claim.</strong> State the result and failure boundary you intend to demonstrate.</li>
+        <li><strong>Build.</strong> Keep the patch focused and include a test, benchmark or reproduction command.</li>
+        <li><strong>Review.</strong> Expect questions about correctness, security and hidden assumptions.</li>
+        <li><strong>Credit.</strong> Released outcomes are credited by contribution type unless you opt out.</li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="needs-title">
+      <p class="eyebrow">Help wanted now</p>
+      <h2 id="needs-title">Problems worth owning.</h2>
+      <div class="grid">
+        <article>
+          <h3>Transport</h3>
+          <p>Evaluate libp2p QUIC, AutoNAT/DCUtR, relay fallback, NAT matrices and partition recovery.</p>
+        </article>
+        <article>
+          <h3>Inference</h3>
+          <p>Define backend and stage-manifest contracts for llama.cpp, vLLM and deterministic test workers.</p>
+        </article>
+        <article>
+          <h3>Memory</h3>
+          <p>Measure Recall@K, context-token cost, encrypted restore latency and poisoning defenses.</p>
+        </article>
+        <article>
+          <h3>Trust</h3>
+          <p>Replace the invitation-wide token with namespace authorization and review key recovery.</p>
+        </article>
+        <article>
+          <h3>Continual learning</h3>
+          <p>Design isolation-safe federated LoRA experiments with regression gates and unlearning audits.</p>
+        </article>
+        <article>
+          <h3>Spatial interfaces</h3>
+          <p>Specify a platform-neutral WebXR/OpenXR adapter without coupling memory to one engine.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="contribute">
+      <p class="eyebrow">Ready to participate?</p>
+      <h2>Start with the smallest result another person can verify.</h2>
+      <p>
+        Read the contributor guide, run the demo and tell us what failed, what was unclear or what
+        you want to measure. A reproducible negative result is welcome.
+      </p>
+      <div class="actions">
+        <a class="primary" href="https://github.com/yanxee/neuron-mesh/blob/main/CONTRIBUTING.md">Read the contribution guide</a>
+        <a class="secondary" href="https://github.com/yanxee/neuron-mesh/discussions">Join the discussion</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>NeuronMesh · MIT License · <a href="/neuron-mesh/">Project overview</a> · <a href="https://github.com/yanxee/neuron-mesh">GitHub repository</a></p>
+  </footer>
+</body>
+</html>

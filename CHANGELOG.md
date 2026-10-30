@@ -11,6 +11,7 @@
 - Add two-node process integration test to CI.
 - Add search-focused project metadata, citation file, public roadmap, contributor guide and GitHub Pages landing site.
 - Add governance, code of conduct, pull-request template, contributor task board, reproducible demo and outreach kit.
+- Add a contributor entry page, research/deployment issue forms, recognition policy and contribution-time paths from a 10-minute demo to sustained research collaboration.
 
 ## 0.1.0 - 2026-10-30
 

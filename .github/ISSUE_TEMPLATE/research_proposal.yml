@@ -1,0 +1,56 @@
+name: Research proposal
+description: Propose a reproducible experiment, benchmark or protocol study
+title: "[Research]: "
+labels: ["enhancement", "help wanted"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Research question and hypothesis
+      description: State one falsifiable question and the expected result.
+    validations:
+      required: true
+  - type: textarea
+    id: relevance
+    attributes:
+      label: Why it matters
+      description: Explain the design decision, risk or user need this result could change.
+    validations:
+      required: true
+  - type: textarea
+    id: method
+    attributes:
+      label: Minimal experiment
+      placeholder: Workload, independent variables, controls, sample size, hardware and random seeds
+    validations:
+      required: true
+  - type: textarea
+    id: metrics
+    attributes:
+      label: Metrics and acceptance threshold
+      placeholder: Baselines, quality metrics, latency, token cost, storage, energy and go/no-go conditions
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Failure modes and threats to validity
+      placeholder: Security, privacy, incomplete data, resource limits and negative-result interpretation
+    validations:
+      required: true
+  - type: textarea
+    id: artifact
+    attributes:
+      label: Proposed artifact
+      description: What can another contributor run, inspect or cite when the work is complete?
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Claim boundaries
+      options:
+        - label: The proposal distinguishes current behavior from roadmap or hypothesis.
+          required: true
+        - label: The proposal can be evaluated without private credentials or unlicensed model weights.
+          required: true

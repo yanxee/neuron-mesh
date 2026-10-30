@@ -123,6 +123,12 @@ h3 { font-size: 1.16rem; }
   gap: 1rem;
 }
 
+.route-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
 article {
   min-height: 190px;
   padding: 1.5rem;
@@ -133,12 +139,39 @@ article {
 
 article p { color: var(--muted); }
 
+.route-card a {
+  font-weight: 700;
+  text-underline-offset: 0.2em;
+}
+
+.route-time {
+  display: inline-block;
+  margin-bottom: 1.2rem;
+  color: var(--accent);
+  font: 700 0.72rem/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .architecture {
   display: grid;
   grid-template-columns: 0.8fr 1.2fr;
   align-items: center;
   gap: 2rem;
 }
+
+.steps {
+  margin: 0;
+  padding: 1.5rem 1.5rem 1.5rem 3rem;
+  background: #04100d;
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  color: var(--muted);
+}
+
+.steps li { padding: 0.35rem 0 0.35rem 0.75rem; }
+
+.steps strong { color: var(--text); }
 
 pre {
   overflow-x: auto;
@@ -175,6 +208,7 @@ footer {
 
 @media (max-width: 800px) {
   .grid,
+  .route-grid,
   .architecture { grid-template-columns: 1fr; }
   .nav-links a:not(:last-child) { display: none; }
   section { padding: 4rem 0; }

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contributor entry guide
+    url: https://yanxee.github.io/neuron-mesh/join.html
+    about: Choose a 10-minute verification, scoped code task or research contribution.
+  - name: Questions and design discussions
+    url: https://github.com/yanxee/neuron-mesh/discussions
+    about: Ask for help, explore an idea or share a hardware/deployment observation.
+  - name: Security reporting
+    url: https://github.com/yanxee/neuron-mesh/security/policy
+    about: Report vulnerabilities or sensitive data issues privately.
