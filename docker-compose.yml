@@ -1,0 +1,45 @@
+services:
+  node-a:
+    build: .
+    ports:
+      - "8001:8000"
+    environment:
+      NEURON_NODE_NAME: node-a
+      NEURON_PUBLIC_URL: http://node-a:8000
+      NEURON_BOOTSTRAP_PEERS: http://node-b:8000
+      NEURON_SHARED_TOKEN: ${NEURON_SHARED_TOKEN:?set NEURON_SHARED_TOKEN}
+      NEURON_MODEL_ID: ${NEURON_MODEL_ID:-neuron-echo-1}
+      NEURON_DEVICE_CLASS: server
+      NEURON_FAILURE_DOMAIN: domain-a
+      NEURON_AVAILABILITY_CLASS: resident
+      NEURON_BACKUP_INTERVAL_SECONDS: ${NEURON_BACKUP_INTERVAL_SECONDS:-15}
+      NEURON_STORAGE_PLEDGE_BYTES: ${NEURON_STORAGE_PLEDGE_BYTES:-1073741824}
+      NEURON_STORAGE_MAX_BYTES: ${NEURON_STORAGE_MAX_BYTES:-5368709120}
+    volumes:
+      - neuron-a-data:/data
+    restart: unless-stopped
+
+  node-b:
+    build: .
+    ports:
+      - "8002:8000"
+    environment:
+      NEURON_NODE_NAME: node-b
+      NEURON_PUBLIC_URL: http://node-b:8000
+      NEURON_BOOTSTRAP_PEERS: http://node-a:8000
+      NEURON_SHARED_TOKEN: ${NEURON_SHARED_TOKEN:?set NEURON_SHARED_TOKEN}
+      NEURON_MODEL_ID: ${NEURON_MODEL_ID:-neuron-echo-1}
+      NEURON_DEVICE_CLASS: server
+      NEURON_FAILURE_DOMAIN: domain-b
+      NEURON_AVAILABILITY_CLASS: resident
+      NEURON_BACKUP_INTERVAL_SECONDS: ${NEURON_BACKUP_INTERVAL_SECONDS:-15}
+      NEURON_STORAGE_PLEDGE_BYTES: ${NEURON_STORAGE_PLEDGE_BYTES:-1073741824}
+      NEURON_STORAGE_MAX_BYTES: ${NEURON_STORAGE_MAX_BYTES:-5368709120}
+    volumes:
+      - neuron-b-data:/data
+    restart: unless-stopped
+
+volumes:
+  neuron-a-data:
+  neuron-b-data:
+
