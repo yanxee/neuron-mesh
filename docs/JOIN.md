@@ -4,8 +4,12 @@ NeuronMesh is a runnable research prototype for capability-aware decentralized L
 
 It is early enough that a small, well-tested contribution can shape the architecture. It is also deliberately honest: public-internet P2P transport, real cross-node Transformer execution, federated training and production security are roadmap items, not current claims.
 
-**Project:** <https://github.com/yanxee/neuron-mesh>  
-**Website:** <https://yanxee.github.io/neuron-mesh/>  
+**Project:** <https://github.com/yanxee/neuron-mesh>
+
+**Website:** <https://yanxee.github.io/neuron-mesh/>
+
+**Architecture:** <https://github.com/yanxee/neuron-mesh/blob/main/ARCHITECTURE.md>
+
 **Tasks:** <https://github.com/yanxee/neuron-mesh/blob/main/docs/CONTRIBUTOR_TASKS.md>
 
 ## Pick a route
@@ -52,6 +56,8 @@ Publish a baseline, hardware, workload, metric, acceptance threshold and failure
 
 ### 4. Review a protocol boundary
 
+Start with the [architecture baseline](../ARCHITECTURE.md), [state and failure model](architecture/STATE_AND_FAILURE.md) and [interface contracts](architecture/INTERFACE_CONTRACTS.md). The project intentionally distinguishes accepted target architecture from implemented behavior.
+
 We especially need adversarial review in:
 
 - distributed systems and NAT traversal;
@@ -71,6 +77,7 @@ You can help by sharing real hardware measurements, a failed deployment, a unive
 
 | Area | Current priority |
 | --- | --- |
+| Architecture | Convert core contracts into versioned schemas and state-machine tests |
 | Transport | Evaluate libp2p QUIC, AutoNAT/DCUtR and relay failure modes |
 | Inference | Define worker and stage-manifest contracts for llama.cpp/vLLM |
 | Memory | Measure context cost, recall quality and encrypted restore latency |
@@ -104,5 +111,6 @@ All contribution types are eligible for release-note credit and progression towa
 
 - [GitHub Discussions](https://github.com/yanxee/neuron-mesh/discussions): open questions and design exploration
 - [Issues](https://github.com/yanxee/neuron-mesh/issues): actionable defects, tasks and benchmarks
+- [Architecture proof questions](architecture/QUALITY_SCENARIOS.md): observable scenarios an implementation must satisfy
 - [Research proposal](https://github.com/yanxee/neuron-mesh/issues/new?template=research_proposal.yml): a hypothesis with a reproduction plan
 - [Compatibility report](https://github.com/yanxee/neuron-mesh/issues/new?template=deployment_report.yml): demo and deployment results
