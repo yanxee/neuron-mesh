@@ -1,0 +1,28 @@
+[Unit]
+Description=Neuron Mesh invite-only node
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=neuron
+Group=neuron
+WorkingDirectory=/opt/neuron-mesh
+EnvironmentFile=-/etc/neuron-mesh.env
+Environment=NEURON_DATA_DIR=/var/lib/neuron-mesh
+Environment=NEURON_HOST=0.0.0.0
+ExecStart=/opt/neuron-mesh/.venv/bin/neuron-mesh serve
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+StateDirectory=neuron-mesh
+
+[Install]
+WantedBy=multi-user.target
+
