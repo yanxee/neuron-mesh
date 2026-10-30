@@ -282,4 +282,4 @@ The next release targets Gate A: versioned schemas, critical-field compatibility
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE) and the [unofficial Chinese reference translation](LICENSE.zh-CN.md).

@@ -314,5 +314,5 @@ neuron-mesh serve --port 8000
 
 ## 许可证
 
-MIT，详见 [LICENSE](LICENSE)。
+MIT，详见 [LICENSE](LICENSE) 和[中文参考译文](LICENSE.zh-CN.md)。
 
