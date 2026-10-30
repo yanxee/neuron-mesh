@@ -17,15 +17,18 @@
 
 ## Help build the open network
 
-NeuronMesh is looking for researchers, engineers and protocol reviewers who want to make decentralized AI systems measurable rather than aspirational.
+NeuronMesh is looking for researchers, engineers, node operators and protocol reviewers who want to make decentralized AI systems measurable rather than aspirational. You do **not** need a GPU or a complete model deployment to make a useful first contribution.
 
-- Start with a scoped task: [Contributor Task Board](docs/CONTRIBUTOR_TASKS.md)
-- Read the [10-minute demo](docs/DEMO.md) and reproduce the two-node test
-- Review the [Roadmap](ROADMAP.md) and propose a reproducible milestone
-- Open a feature request with metrics, baselines and failure modes
-- Share the project using the [honest outreach kit](docs/OUTREACH.md)
+| Time | Useful first step | Start |
+| --- | --- | --- |
+| 10 minutes | Reproduce the deterministic two-node demo and report your OS/hardware | [10-minute demo](docs/DEMO.md) |
+| 30–90 minutes | Pick a scoped bug, test or documentation task | [Good first issues](https://github.com/yanxee/neuron-mesh/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) |
+| One afternoon | Benchmark routing, memory tiering or heterogeneous hardware | [Research task board](docs/CONTRIBUTOR_TASKS.md#research-contributions) |
+| Ongoing collaboration | Propose a reproducible milestone, protocol review or subsystem | [Contributor entry guide](https://yanxee.github.io/neuron-mesh/join.html) |
 
-High-value areas: distributed systems, LLM serving, memory consolidation, federated learning, privacy, security, chaos testing and WebXR.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Questions and early ideas belong in [GitHub Discussions](https://github.com/yanxee/neuron-mesh/discussions); actionable changes belong in issues.
+
+High-value areas: distributed systems, LLM serving, memory consolidation, continual/federated learning, privacy, security, chaos testing and WebXR.
 
 ## 为什么是 NeuronMesh？
 
@@ -260,6 +263,8 @@ neuron-mesh serve --port 8000
 
 ## 设计与研究文档
 
+- [参与指南：从 10 分钟验证到研究合作](docs/JOIN.md)
+- [贡献流程](CONTRIBUTING.md)
 - [研究型邀请制可执行方案](神经元式去中心化大模型网络系统-研究型邀请制可执行方案.md)
 - [持续学习与持久记忆方案](神经元式去中心化大模型网络系统-持续学习与持久记忆方案.md)
 - [元宇宙接入预留方案](神经元式去中心化大模型网络系统-元宇宙接入预留方案.md)

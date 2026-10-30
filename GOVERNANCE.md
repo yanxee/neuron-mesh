@@ -22,7 +22,25 @@ NeuronMesh is currently a research prototype. Governance is intentionally lightw
 
 ## Promotion
 
-Regular contributors who demonstrate sound judgment, constructive review and reliable follow-through may be invited as reviewers or maintainers. Contribution volume alone is not sufficient.
+NeuronMesh uses a contribution ladder rather than a fixed waiting period. Promotion requires demonstrated judgment, constructive review and reliable follow-through; contribution volume alone is not sufficient.
+
+| Stage | Evidence | Responsibility |
+| --- | --- | --- |
+| Participant | Question, compatibility report, issue or reproduced result | Share context and evidence |
+| Contributor | One accepted code, test, research, documentation or deployment artifact | Own scoped results and respond to review |
+| Returning contributor | Multiple accepted contributions across at least two tasks | Help refine scope and reproduce others' results |
+| Reviewer | Repeated sound reviews or a validated subsystem contribution | Request changes within an explicit area |
+| Maintainer | Sustained stewardship, sound protocol judgment and reliable releases | Roadmap, releases, security response and final merge decisions |
+
+Any person may propose a contributor for a new stage in a public issue. The affected person must accept the responsibility before it is recorded. Reviews and benchmarks are credited in the same way as code. Contributors may remain anonymous in public recognition.
+
+## Community commitments
+
+- New issues and pull requests are triaged on a best-effort basis, normally within three business days.
+- Actionable work has a reproduction path, acceptance criterion and explicit non-goals.
+- The project distinguishes tested behavior from hypotheses and roadmap items.
+- Maintainers document material design decisions and acknowledge mistakes when evidence changes.
+- Participation is judged by conduct and contribution quality, not affiliation or model choice.
 
 ## Security
 
