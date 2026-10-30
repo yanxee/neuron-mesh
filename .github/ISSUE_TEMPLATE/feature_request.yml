@@ -1,25 +1,25 @@
-name: Feature request
-description: Propose a measurable research or engineering improvement
+name: Feature request / 功能请求
+description: Propose a measurable research or engineering improvement / 提出可度量的研究或工程改进
 title: "[Feature]: "
 labels: ["enhancement"]
 body:
   - type: textarea
     id: problem
     attributes:
-      label: Problem and use case
+      label: Problem and use case / 问题与使用场景
     validations:
       required: true
   - type: textarea
     id: proposal
     attributes:
-      label: Proposed approach
+      label: Proposed approach / 建议方案
     validations:
       required: true
   - type: textarea
     id: verification
     attributes:
-      label: Verification plan
-      placeholder: Metrics, baselines, failure modes and go/no-go conditions
+      label: Verification plan / 验证计划
+      placeholder: Metrics, baselines, failure modes and go/no-go conditions / 指标、基线、失败模式和 go/no-go 条件
     validations:
       required: true
 

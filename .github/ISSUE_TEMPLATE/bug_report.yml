@@ -1,32 +1,32 @@
-name: Bug report
-description: Report a reproducible NeuronMesh defect
+name: Bug report / 缺陷报告
+description: Report a reproducible NeuronMesh defect / 报告可复现的 NeuronMesh 缺陷
 title: "[Bug]: "
 labels: ["bug"]
 body:
   - type: textarea
     id: summary
     attributes:
-      label: Summary
+      label: Summary / 摘要
     validations:
       required: true
   - type: textarea
     id: reproduce
     attributes:
-      label: Reproduction steps
-      placeholder: Commands, configuration and relevant non-secret logs
+      label: Reproduction steps / 复现步骤
+      placeholder: Commands, configuration and relevant non-secret logs / 命令、配置和非敏感日志
     validations:
       required: true
   - type: input
     id: version
     attributes:
-      label: Version
-      placeholder: v0.2.0 or commit SHA
+      label: Version / 版本
+      placeholder: v0.2.0 or commit SHA / v0.2.0 或提交 SHA
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
-      label: Expected behavior
+      label: Expected behavior / 预期行为
     validations:
       required: true
 

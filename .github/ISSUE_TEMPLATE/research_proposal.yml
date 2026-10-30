@@ -1,56 +1,56 @@
-name: Research proposal
-description: Propose a reproducible experiment, benchmark or protocol study
+name: Research proposal / 研究提案
+description: Propose a reproducible experiment, benchmark or protocol study / 提出可复现实验、基准或协议研究
 title: "[Research]: "
 labels: ["enhancement", "help wanted"]
 body:
   - type: textarea
     id: question
     attributes:
-      label: Research question and hypothesis
-      description: State one falsifiable question and the expected result.
+      label: Research question and hypothesis / 研究问题与假设
+      description: State one falsifiable question and the expected result. / 给出一个可证伪问题和预期结果。
     validations:
       required: true
   - type: textarea
     id: relevance
     attributes:
-      label: Why it matters
-      description: Explain the design decision, risk or user need this result could change.
+      label: Why it matters / 研究意义
+      description: Explain the design decision, risk or user need this result could change. / 说明该结果可能改变的设计决策、风险或用户需求。
     validations:
       required: true
   - type: textarea
     id: method
     attributes:
-      label: Minimal experiment
-      placeholder: Workload, independent variables, controls, sample size, hardware and random seeds
+      label: Minimal experiment / 最小实验
+      placeholder: Workload, independent variables, controls, sample size, hardware and random seeds / 工作负载、自变量、控制项、样本量、硬件和随机种子
     validations:
       required: true
   - type: textarea
     id: metrics
     attributes:
-      label: Metrics and acceptance threshold
-      placeholder: Baselines, quality metrics, latency, token cost, storage, energy and go/no-go conditions
+      label: Metrics and acceptance threshold / 指标与验收阈值
+      placeholder: Baselines, quality metrics, latency, token cost, storage, energy and go/no-go conditions / 基线、质量指标、延迟、token 成本、存储、能耗和 go/no-go 条件
     validations:
       required: true
   - type: textarea
     id: risks
     attributes:
-      label: Failure modes and threats to validity
-      placeholder: Security, privacy, incomplete data, resource limits and negative-result interpretation
+      label: Failure modes and threats to validity / 失败模式与有效性威胁
+      placeholder: Security, privacy, incomplete data, resource limits and negative-result interpretation / 安全、隐私、不完整数据、资源限制和负面结果解释
     validations:
       required: true
   - type: textarea
     id: artifact
     attributes:
-      label: Proposed artifact
-      description: What can another contributor run, inspect or cite when the work is complete?
+      label: Proposed artifact / 拟交付产物
+      description: What can another contributor run, inspect or cite when the work is complete? / 工作完成后，其他贡献者可以运行、检查或引用什么？
     validations:
       required: true
   - type: checkboxes
     id: boundaries
     attributes:
-      label: Claim boundaries
+      label: Claim boundaries / 主张边界
       options:
-        - label: The proposal distinguishes current behavior from roadmap or hypothesis.
+        - label: The proposal distinguishes current behavior from roadmap or hypothesis. / 提案区分当前行为、路线图和假设。
           required: true
-        - label: The proposal can be evaluated without private credentials or unlicensed model weights.
+        - label: The proposal can be evaluated without private credentials or unlicensed model weights. / 无需私有凭证或未授权模型权重即可评估该提案。
           required: true
