@@ -1,0 +1,25 @@
+name: Feature request
+description: Propose a measurable research or engineering improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and use case
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification plan
+      placeholder: Metrics, baselines, failure modes and go/no-go conditions
+    validations:
+      required: true
+

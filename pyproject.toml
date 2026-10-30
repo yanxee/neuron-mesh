@@ -10,6 +10,24 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "yanxee" }]
+keywords = [
+  "decentralized-ai",
+  "distributed-inference",
+  "federated-learning",
+  "large-language-models",
+  "llm",
+  "long-term-memory",
+  "peer-to-peer",
+  "persistent-memory",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
   "cryptography>=43,<47",
   "fastapi>=0.115,<1",
@@ -29,6 +47,12 @@ dev = [
 
 [project.scripts]
 neuron-mesh = "neuron_mesh.__main__:main"
+
+[project.urls]
+Homepage = "https://yanxee.github.io/neuron-mesh/"
+Repository = "https://github.com/yanxee/neuron-mesh"
+Issues = "https://github.com/yanxee/neuron-mesh/issues"
+Documentation = "https://yanxee.github.io/neuron-mesh/"
 
 [tool.hatch.build.targets.wheel]
 packages = ["neuron_mesh"]

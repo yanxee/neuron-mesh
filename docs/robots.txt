@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://yanxee.github.io/neuron-mesh/sitemap.xml
+
