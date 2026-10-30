@@ -1,5 +1,7 @@
 # Contributing to NeuronMesh
 
+[English](CONTRIBUTING.md) | [简体中文](CONTRIBUTING.zh-CN.md)
+
 NeuronMesh is an early research project. Small, testable and clearly documented contributions are welcome. You do not need to implement the whole vision or run a large model to help.
 
 New here? Use the [contributor entry guide](https://yanxee.github.io/neuron-mesh/join.html) to choose a path based on the time and expertise you want to offer.
@@ -68,6 +70,7 @@ All of the following must pass before a pull request is ready for review:
 - Include performance numbers with hardware, model, prompt/output lengths and network conditions.
 - Include a short migration note for configuration, storage-format or API changes.
 - Disclose substantial AI assistance and remain accountable for every submitted line.
+- Update the English and Chinese paired documentation together. See [the language policy](docs/I18N.md).
 
 ## Research claims
 

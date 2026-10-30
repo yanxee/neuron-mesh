@@ -1,5 +1,7 @@
 # Provisional Governance
 
+[English](GOVERNANCE.md) | [简体中文](GOVERNANCE.zh-CN.md)
+
 NeuronMesh is currently a research prototype. Governance is intentionally lightweight and will evolve as the contributor base grows.
 
 ## Current roles

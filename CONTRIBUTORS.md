@@ -1,5 +1,7 @@
 # Contributors
 
+[English](CONTRIBUTORS.md) | [简体中文](CONTRIBUTORS.zh-CN.md)
+
 NeuronMesh credits code, tests, benchmarks, protocol review, documentation, translations, compatibility reports and reproduced experiments. Contribution volume alone does not determine credit or decision authority.
 
 ## Maintainer

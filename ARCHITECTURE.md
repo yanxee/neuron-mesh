@@ -1,5 +1,7 @@
 # NeuronMesh System Architecture
 
+[English](ARCHITECTURE.md) | [简体中文](ARCHITECTURE.zh-CN.md)
+
 **Status:** Architecture baseline `v0.1`, target design with partial reference implementation  
 **Date:** 2026-10-30  
 **Scope:** Cross-node architecture for membership, discovery, inference, durable memory, virtual roles, continual learning and spatial adapters
