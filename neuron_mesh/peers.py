@@ -140,6 +140,8 @@ class PeerMesh:
         return [
             peer
             for peer in self.list_live()
+            if peer.capability.admitted
+            and peer.capability.resident_state not in {"draining", "hibernated"}
             if model_id in peer.capability.models
             and (
                 "full-model" in peer.capability.service_roles

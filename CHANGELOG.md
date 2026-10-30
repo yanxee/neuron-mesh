@@ -1,0 +1,18 @@
+# Changelog
+
+## 0.2.0 - 2026-10-30
+
+- Enforce minimum storage admission and reject backups that exceed pledged capacity.
+- Add signed drain receipts that distinguish hardened, degraded and local-only persistence.
+- Checkpoint SQLite WAL before reporting a drain result.
+- Add manual virtual-role export/import with password-derived encryption and re-encryption at the target node.
+- Add `/readyz`, status/drain CLI commands and automatic best-effort drain on graceful process shutdown.
+- Add tests for admission, local-only shutdown and cross-node role migration.
+- Add two-node process integration test to CI.
+
+## 0.1.0 - 2026-10-30
+
+- Initial invite-only HTTP mesh MVP.
+- Signed node capabilities, encrypted memory, blind indexing, remote ciphertext backup and cold recall.
+- OpenAI-compatible chat endpoint and spatial-session mock interface.
+

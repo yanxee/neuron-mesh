@@ -19,6 +19,7 @@ def test_openai_compatible_api_and_memory(tmp_path: Path) -> None:
 
     with TestClient(create_app(settings)) as client:
         assert client.get("/healthz").json() == {"status": "ok"}
+        assert client.get("/readyz").status_code == 200
         assert client.get("/v1/models").status_code == 401
         models = client.get("/v1/models", headers=headers)
         assert models.status_code == 200
@@ -79,6 +80,8 @@ def test_openai_compatible_api_and_memory(tmp_path: Path) -> None:
         receipt = client.post("/v1/node/drain", headers=headers)
         assert receipt.status_code == 200
         assert receipt.json()["memory_count"] == 1
+        assert receipt.json()["status"] == "local_only"
+        assert receipt.json()["degraded_memory_count"] == 1
         assert client.get("/v1/network/status", headers=headers).json()["resident_state"] == (
             "draining"
         )
@@ -141,4 +144,75 @@ def test_role_and_spatial_permission_proxy(tmp_path: Path) -> None:
         )
         assert allowed.json()["accepted"] is True
         assert denied.json()["accepted"] is False
+
+
+def test_virtual_role_migration_reencrypts_memory(tmp_path: Path) -> None:
+    headers = {"Authorization": "Bearer secret"}
+    source_settings = Settings(
+        node_name="source",
+        data_dir=tmp_path / "source",
+        shared_token="secret",
+        offline=True,
+    )
+    target_settings = Settings(
+        node_name="target",
+        data_dir=tmp_path / "target",
+        shared_token="secret",
+        offline=True,
+    )
+
+    with (
+        TestClient(create_app(source_settings)) as source,
+        TestClient(create_app(target_settings)) as target,
+    ):
+        target_capability = target.get("/v1/node/capabilities", headers=headers).json()
+        target_id = target_capability["capability"]["node_id"]
+        source.post(
+            "/v1/roles",
+            headers=headers,
+            json={
+                "role_id": "agent://migrating",
+                "owner_id": "owner-1",
+                "namespace_id": "ns-migrating",
+                "allowed_actions": ["speak"],
+            },
+        )
+        source.post(
+            "/v1/memory/write",
+            headers=headers,
+            json={
+                "namespace_id": "ns-migrating",
+                "owner_id": "owner-1",
+                "role_id": "agent://migrating",
+                "kind": "fact",
+                "text": "迁移后仍应记住这条信息。",
+            },
+        )
+        exported = source.post(
+            "/v1/roles/agent://migrating/export",
+            headers=headers,
+            json={
+                "target_node_id": target_id,
+                "transfer_secret": "one-time-transfer-secret",
+            },
+        )
+        assert exported.status_code == 200
+
+        imported = target.post(
+            "/v1/roles/import",
+            headers=headers,
+            json={
+                "transfer_secret": "one-time-transfer-secret",
+                "package": exported.json(),
+            },
+        )
+        assert imported.status_code == 200
+        assert imported.json()["imported_memory_count"] == 1
+        recalled = target.get(
+            "/v1/memory/search",
+            headers=headers,
+            params={"namespace_id": "ns-migrating", "q": "迁移记忆"},
+        )
+        assert recalled.status_code == 200
+        assert recalled.json()[0]["text"] == "迁移后仍应记住这条信息。"
 

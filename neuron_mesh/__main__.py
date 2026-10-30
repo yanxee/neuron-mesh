@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 
+import httpx
 import uvicorn
 
 from .config import Settings
@@ -16,6 +17,12 @@ def main() -> None:
     serve_parser.add_argument("--host", default=None)
     serve_parser.add_argument("--port", type=int, default=None)
     serve_parser.add_argument("--reload", action="store_true")
+    status_parser = subparsers.add_parser("status", help="read live node status")
+    status_parser.add_argument("--url", default="")
+    status_parser.add_argument("--token", default="")
+    drain_parser = subparsers.add_parser("drain", help="prepare a safe node shutdown")
+    drain_parser.add_argument("--url", default="")
+    drain_parser.add_argument("--token", default="")
     subparsers.add_parser("settings", help="print effective non-secret settings")
     args = parser.parse_args()
 
@@ -34,6 +41,24 @@ def main() -> None:
             "local_backend_url": settings.local_backend_url,
         }
         print(json.dumps(safe, ensure_ascii=False, indent=2))
+        return
+
+    if args.command in {"status", "drain"}:
+        base_url = (args.url or f"http://127.0.0.1:{settings.port}").rstrip("/")
+        token = args.token or settings.shared_token
+        path = "/v1/network/status" if args.command == "status" else "/v1/node/drain"
+        method = "GET" if args.command == "status" else "POST"
+        try:
+            response = httpx.request(
+                method,
+                f"{base_url}{path}",
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=settings.request_timeout_seconds,
+            )
+            response.raise_for_status()
+        except httpx.HTTPError as exc:
+            raise SystemExit(f"request failed: {exc}") from exc
+        print(json.dumps(response.json(), ensure_ascii=False, indent=2))
         return
 
     if args.host:

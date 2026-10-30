@@ -32,3 +32,19 @@ def test_signed_capability_contains_resource_pledge(tmp_path: Path) -> None:
     assert signed["public_key_b64"] == identity.public_key_b64
     assert len(str(signed["signature_b64"])) > 20
 
+
+def test_insufficient_storage_blocks_full_node_admission(tmp_path: Path) -> None:
+    settings = make_settings(tmp_path)
+    settings.storage_pledge_bytes = 2 * 1024**3
+    settings.storage_max_bytes = 1024
+    settings.ensure_data_dir()
+    identity = NodeIdentity(tmp_path)
+    service = CapabilityService(settings, identity)
+
+    capability = service.current()
+
+    assert capability.admitted is False
+    assert capability.resident_state == "warming"
+    assert capability.service_roles == ["ingress"]
+    assert capability.admission_reasons
+

@@ -336,6 +336,21 @@ class MemoryStore:
             ).fetchall()
         return [self._row_to_record(row) for row in rows]
 
+    def backup_usage_bytes(self) -> int:
+        with self.database.connection() as connection:
+            row = connection.execute(
+                "SELECT COALESCE(SUM(size_bytes), 0) AS total FROM backup_blobs"
+            ).fetchone()
+        return int(row["total"])
+
+    def backup_size(self, memory_id: str) -> int:
+        with self.database.connection() as connection:
+            row = connection.execute(
+                "SELECT size_bytes FROM backup_blobs WHERE memory_id = ?",
+                (memory_id,),
+            ).fetchone()
+        return int(row["size_bytes"]) if row else 0
+
     def replica_endpoints(self, memory_id: str) -> list[tuple[str, str, str]]:
         with self.database.connection() as connection:
             rows = connection.execute(
@@ -354,6 +369,18 @@ class MemoryStore:
         with self.database.connection() as connection:
             rows = connection.execute(
                 "SELECT * FROM memories WHERE status = 'active' ORDER BY memory_id"
+            ).fetchall()
+        return [self._row_to_record(row) for row in rows]
+
+    def list_namespace(self, namespace_id: str) -> list[MemoryRecord]:
+        with self.database.connection() as connection:
+            rows = connection.execute(
+                """
+                SELECT * FROM memories
+                WHERE namespace_id = ? AND status != 'tombstoned'
+                ORDER BY created_at, memory_id
+                """,
+                (namespace_id,),
             ).fetchall()
         return [self._row_to_record(row) for row in rows]
 

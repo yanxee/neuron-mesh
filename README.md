@@ -2,7 +2,7 @@
 
 Neuron Mesh 是一个面向**研究型、邀请制网络**的去中心化大模型协同推理与持久记忆参考实现。
 
-当前版本是 `v0.1.0` 研究型 MVP，目标是提供一套可以实际启动、测试和继续扩展的工程骨架，而不是宣称已经完成公网级大模型训练网络。
+当前版本是 `v0.2.0` 研究型 MVP，目标是提供一套可以实际启动、测试和继续扩展的工程骨架，而不是宣称已经完成公网级大模型训练网络。
 
 ## 已实现
 
@@ -10,13 +10,16 @@ Neuron Mesh 是一个面向**研究型、邀请制网络**的去中心化大模�
 - 支持本地 Echo 后端，也可转发到 llama.cpp、vLLM 等 OpenAI 兼容后端；
 - Ed25519 节点身份和签名能力记录；
 - 节点资源承诺、设备画像及强/弱神经元分级；
+- 存储承诺准入门槛和远端副本容量拒绝；
 - 基于共享邀请令牌的 HTTP 节点发现、签名节点公告和入口侧远端选择；
 - `networked` 在线模式和 `offline-autonomous` 离线降级模式；
 - SQLite WAL 持久化；
 - AES-GCM 加密记忆和 HMAC 盲索引；
 - 热/温/冷记忆分层、远端密文副本和按需恢复；
 - 虚拟角色、动作白名单和空间会话模拟接口；
-- 主动排空接口和签名关机回执；
+- 虚拟角色导出、导入和传输密钥保护的跨节点记忆重加密；
+- 主动排空、WAL checkpoint 和区分本地/远端持久性的签名关机回执；
+- `status`/`drain` 运维命令和 `/readyz` 就绪探测；
 - 双节点 Docker Compose、本地测试和 GitHub Actions CI。
 
 ## 尚未实现
@@ -27,7 +30,7 @@ Neuron Mesh 是一个面向**研究型、邀请制网络**的去中心化大模�
 - 真实的 Transformer 阶段切分与跨节点激活传输；
 - 真实 GPU 集群张量并行；
 - 联邦 LoRA 训练、模型聚合和遗忘算法；
-- 角色主节点自动迁移及跨加密域的密钥托管；
+- 角色迁移的自动两阶段切换、离线秘钥托管和无人值守恢复；
 - WebXR/OpenXR 原生客户端；
 - 商用身份、计费、滥用治理和容灾 SLA。
 
@@ -85,6 +88,18 @@ neuron-mesh serve --host 127.0.0.1 --port 8000
 
 API 文档：<http://127.0.0.1:8000/docs>
 
+## 运行与维护
+
+```powershell
+# 查看当前在线节点和本机降级状态
+.\.venv\Scripts\neuron-mesh.exe status --url http://127.0.0.1:8000
+
+# 主动排空；拿到签名回执后再停止进程
+.\.venv\Scripts\neuron-mesh.exe drain --url http://127.0.0.1:8000
+```
+
+`/healthz` 只表示 HTTP 进程存活；`/readyz` 还会检查最低存储承诺、资源准入和是否正在排空。Uvicorn 正常收到终止信号时，会先尝试排空和 WAL checkpoint；强制终止无法保证同样的恢复语义。
+
 ## 调用示例
 
 ```bash
@@ -115,6 +130,8 @@ curl http://127.0.0.1:8000/v1/chat/completions \
   }'
 ```
 
+角色迁移是显式操作：源节点导出加密迁移包，目标节点使用同一个一次性传输密钥导入。传输密钥不会写入数据库。完整 OpenAPI 定义见 `/docs`。
+
 ## 双节点演示
 
 复制 `.env.example` 为 `.env`，修改邀请令牌，然后运行：
@@ -129,6 +146,19 @@ docker compose up --build
 - `http://127.0.0.1:8002`：`domain-b`
 
 两节点会互相公告签名能力记录。向节点 B 写入一条需要立即备份的记忆后，可检查节点 A 的 `/v1/internal/backups/{memory_id}`。远端只能保存密文，密钥仍在来源节点。
+
+Linux 常驻部署可使用 [systemd 服务样例](deploy/systemd/neuron-mesh.service)，它启用了 `Restart=always`、独立状态目录、受限系统访问和 30 秒正常退出窗口。Docker Compose 使用 `restart: unless-stopped`。
+
+```bash
+sudo useradd --system --home /opt/neuron-mesh neuron
+sudo install -d -o neuron -g neuron /var/lib/neuron-mesh
+sudo install -m 0644 deploy/systemd/neuron-mesh.service /etc/systemd/system/
+sudo install -m 0600 deploy/systemd/neuron-mesh.env.example /etc/neuron-mesh.env
+sudo systemctl daemon-reload
+sudo systemctl enable --now neuron-mesh
+```
+
+部署前必须修改环境文件中的公共地址、邀请令牌和故障域。
 
 ## 使用真实推理后端
 
@@ -187,6 +217,7 @@ neuron-mesh serve --port 8000
 - AES-GCM 密钥保存在来源节点本地目录，远程副本节点无法解密；
 - 单个共享令牌不等于多租户授权；
 - 模型输出和外部记忆必须视为不可信数据；
+- 角色迁移的传输密钥必须通过独立安全通道传递，不可与迁移包一起公开传输；
 - 本仓库不包含真实模型权重。
 
 ## 设计与研究文档
@@ -206,5 +237,5 @@ neuron-mesh serve --port 8000
 
 ## License
 
-Apache-2.0，详见 [LICENSE](LICENSE)。
+MIT，详见 [LICENSE](LICENSE)。
 

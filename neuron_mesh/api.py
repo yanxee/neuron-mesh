@@ -26,12 +26,16 @@ from .models import (
     MemoryWriteRequest,
     PeerAnnouncement,
     RoleCreateRequest,
+    RoleMigrationImport,
+    RoleMigrationPackage,
+    RoleMigrationRequest,
+    RoleMigrationResult,
     ShutdownReceipt,
     SpatialEvent,
     SpatialSessionOpen,
 )
 from .peers import PeerMesh
-from .roles import RoleStore
+from .roles import RoleMigrationService, RoleStore
 from .security import MemoryCipher, NodeIdentity, b64d, b64e, bearer_matches
 from .spatial import SpatialManager
 from .storage import Database, utc_now
@@ -51,6 +55,7 @@ class Runtime:
     backups: BackupManager
     backend: LocalBackend
     roles: RoleStore
+    migrations: RoleMigrationService
     spatial: SpatialManager
     resident_state: str = "resident"
     maintenance_task: asyncio.Task[None] | None = None
@@ -69,6 +74,42 @@ def _memory_roots(records: list[Any]) -> str:
     for memory_id in sorted(record.memory_id for record in records):
         digest.update(memory_id.encode("ascii"))
     return f"sha256:{digest.hexdigest()}"
+
+
+async def _drain_runtime(state: Runtime) -> ShutdownReceipt:
+    state.resident_state = "draining"
+    records = state.memory.list_all_active()
+    replica_count = 0
+    replicated_memory_count = 0
+    for record in records:
+        replica_count += len(await state.backups.backup_memory(record))
+        refreshed = state.memory.get(record.memory_id)
+        if refreshed and refreshed.durability in {"D2", "D3"}:
+            replicated_memory_count += 1
+    state.database.checkpoint()
+    root = _memory_roots(records)
+    degraded_memory_count = len(records) - replicated_memory_count
+    status = (
+        "local_only"
+        if records and replicated_memory_count == 0
+        else "degraded"
+        if degraded_memory_count
+        else "hardened"
+    )
+    unsigned = {
+        "node_id": state.identity.node_id,
+        "memory_count": len(records),
+        "replicated_memory_count": replicated_memory_count,
+        "degraded_memory_count": degraded_memory_count,
+        "replica_count": replica_count,
+        "memory_ids_root": root,
+        "status": status,
+        "created_at": utc_now(),
+    }
+    return ShutdownReceipt(
+        **unsigned,
+        signature_b64=state.identity.sign(unsigned),
+    )
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -93,6 +134,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             memory, peers, local_failure_domain=configured.failure_domain
         )
         roles = RoleStore(database, identity.node_id)
+        migrations = RoleMigrationService(
+            roles, memory, node_id=identity.node_id
+        )
         spatial = SpatialManager(roles)
         backend = LocalBackend(configured)
         runtime = Runtime(
@@ -106,6 +150,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             backups=backups,
             backend=backend,
             roles=roles,
+            migrations=migrations,
             spatial=spatial,
         )
         app.state.runtime = runtime
@@ -129,12 +174,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 await asyncio.gather(
                     runtime.maintenance_task, return_exceptions=True
                 )
+            if runtime.resident_state != "draining":
+                try:
+                    receipt = await asyncio.wait_for(_drain_runtime(runtime), timeout=15)
+                    logger.info(
+                        "automatic drain completed status=%s memories=%s replicas=%s",
+                        receipt.status,
+                        receipt.memory_count,
+                        receipt.replica_count,
+                    )
+                except Exception:
+                    logger.exception("automatic drain failed")
             await peers.stop()
             await backend.close()
 
     app = FastAPI(
         title="Neuron Mesh",
-        version="0.1.0",
+        version="0.2.0",
         description="Invite-only decentralized inference and persistent memory research MVP",
         lifespan=lifespan,
     )
@@ -156,6 +212,25 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    @app.get("/readyz")
+    async def ready(request: Request) -> dict[str, object]:
+        state = runtime(request)
+        capability = state.capabilities.current(state.resident_state)
+        ready_now = capability.admitted and state.resident_state not in {
+            "draining",
+            "hibernated",
+        }
+        if not ready_now:
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "ready": False,
+                    "state": capability.resident_state,
+                    "reasons": capability.admission_reasons,
+                },
+            )
+        return {"ready": True, "state": capability.resident_state}
+
     @app.get("/v1/node/capabilities", dependencies=[Depends(auth)])
     async def node_capabilities(request: Request) -> dict[str, object]:
         state = runtime(request)
@@ -174,7 +249,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "node_id": state.identity.node_id,
             "mode": (
                 "networked"
-                if peers and not state.settings.offline and state.resident_state != "draining"
+                if peers
+                and state.capabilities.current(state.resident_state).admitted
+                and not state.settings.offline
+                and state.resident_state != "draining"
                 else "offline-autonomous"
             ),
             "resident_state": state.resident_state,
@@ -199,24 +277,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/v1/node/drain", dependencies=[Depends(auth)])
     async def drain(request: Request) -> ShutdownReceipt:
-        state = runtime(request)
-        state.resident_state = "draining"
-        records = state.memory.list_all_active()
-        replica_count = 0
-        for record in records:
-            replica_count += len(await state.backups.backup_memory(record))
-        root = _memory_roots(records)
-        unsigned = {
-            "node_id": state.identity.node_id,
-            "memory_count": len(records),
-            "replica_count": replica_count,
-            "memory_ids_root": root,
-            "created_at": utc_now(),
-        }
-        return ShutdownReceipt(
-            **unsigned,
-            signature_b64=state.identity.sign(unsigned),
-        )
+        return await _drain_runtime(runtime(request))
 
     @app.post("/v1/node/resume", dependencies=[Depends(auth)])
     async def resume(request: Request) -> dict[str, str]:
@@ -400,6 +461,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         nonce = b64d(payload.nonce_b64)
         if len(cipher) > state.settings.max_request_bytes:
             raise HTTPException(status_code=413, detail="backup exceeds request limit")
+        capability = state.capabilities.current(state.resident_state)
+        if not capability.admitted:
+            raise HTTPException(
+                status_code=507,
+                detail="node has not met its minimum storage admission pledge",
+            )
+        existing_size = state.memory.backup_size(payload.memory_id)
+        current_size = state.memory.backup_usage_bytes()
+        effective_quota = min(
+            state.settings.storage_max_bytes,
+            capability.resource_pledge.storage_min_bytes,
+        )
+        if current_size - existing_size + len(cipher) > effective_quota:
+            raise HTTPException(
+                status_code=507,
+                detail="node storage pledge would be exceeded",
+            )
         state.memory.save_backup(
             BackupCopy(
                 memory_id=payload.memory_id,
@@ -445,7 +523,39 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def create_role(payload: RoleCreateRequest, request: Request) -> dict[str, object]:
         return runtime(request).roles.create(payload).model_dump(mode="json")
 
-    @app.get("/v1/roles/{role_id}", dependencies=[Depends(auth)])
+    @app.post("/v1/roles/import", dependencies=[Depends(auth)])
+    async def import_role(
+        payload: RoleMigrationImport, request: Request
+    ) -> RoleMigrationResult:
+        state = runtime(request)
+        try:
+            role, imported, source_node_id = state.migrations.import_package(
+                payload.package.model_dump(mode="json"), payload.transfer_secret
+            )
+        except (ValueError, KeyError, TypeError) as exc:
+            raise HTTPException(status_code=400, detail="invalid migration package") from exc
+        return RoleMigrationResult(
+            role=role,
+            imported_memory_count=imported,
+            source_node_id=source_node_id,
+            target_node_id=state.identity.node_id,
+        )
+
+    @app.post("/v1/roles/{role_id:path}/export", dependencies=[Depends(auth)])
+    async def export_role(
+        role_id: str,
+        payload: RoleMigrationRequest,
+        request: Request,
+    ) -> RoleMigrationPackage:
+        try:
+            package = runtime(request).migrations.export_package(
+                role_id, payload.target_node_id, payload.transfer_secret
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return RoleMigrationPackage.model_validate(package)
+
+    @app.get("/v1/roles/{role_id:path}", dependencies=[Depends(auth)])
     async def get_role(role_id: str, request: Request) -> dict[str, object]:
         role = runtime(request).roles.get(role_id)
         if role is None:

@@ -77,9 +77,19 @@ class CapabilityService:
         memory = psutil.virtual_memory()
         usage = psutil.disk_usage(str(self.settings.data_dir))
         gpu_name, gpu_memory, backend = self._gpu()
+        reasons: list[str] = []
+        storage_after_reserve = max(
+            0, usage.free - self.settings.storage_safety_reserve_bytes
+        )
+        if self.settings.storage_max_bytes < self.settings.storage_pledge_bytes:
+            reasons.append("storage_max_bytes is below the required storage pledge")
+        if storage_after_reserve < self.settings.storage_pledge_bytes:
+            reasons.append("insufficient free disk after the safety reserve")
+        if self.settings.cpu_limit_percent <= 0:
+            reasons.append("CPU contribution must be greater than zero")
         commitment = min(
             self.settings.storage_pledge_bytes,
-            max(0, usage.free - self.settings.storage_safety_reserve_bytes),
+            storage_after_reserve,
             self.settings.storage_max_bytes,
         )
         compute = ComputeProfile(
@@ -92,22 +102,26 @@ class CapabilityService:
             backend=backend,
             synthetic_ops_per_second=self._synthetic_benchmark(),
         )
-        strong = (
+        admitted = not reasons
+        strong = admitted and (
             backend in {"cuda", "metal", "rocm"}
             or (compute.ram_total_bytes >= 64 * 1024**3 and compute.cpu_count >= 12)
         )
         tier = "strong" if strong else "weak"
+        effective_roles = (
+            self.settings.service_roles if admitted else ["ingress"]
+        )
         return NodeCapability(
             node_id=self.identity.node_id,
             node_name=self.settings.node_name,
             device_class=self.settings.device_class,
-            service_roles=self.settings.service_roles,
+            service_roles=effective_roles,
             models=[self.settings.model_id],
             resource_pledge=ResourcePledge(
                 storage_min_bytes=commitment,
-                storage_max_bytes=min(
+                storage_max_bytes=max(
+                    self.settings.storage_pledge_bytes,
                     self.settings.storage_max_bytes,
-                    max(commitment, self.settings.storage_pledge_bytes),
                 ),
                 storage_safety_reserve_bytes=self.settings.storage_safety_reserve_bytes,
                 cpu_limit_percent=self.settings.cpu_limit_percent,
@@ -121,6 +135,8 @@ class CapabilityService:
             ),
             storage_used_bytes=usage.used,
             storage_capacity_bytes=usage.total,
+            admitted=admitted,
+            admission_reasons=reasons,
             derived_capacity=[
                 DerivedCapacity(
                     tier=tier,
@@ -130,7 +146,7 @@ class CapabilityService:
                 )
             ],
             observed_at=time.time(),
-            resident_state=resident_state,
+            resident_state=resident_state if admitted else "warming",
         )
 
     def signed(self, resident_state: str = "resident") -> dict[str, object]:

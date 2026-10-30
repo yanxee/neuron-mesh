@@ -64,6 +64,8 @@ class NodeCapability(BaseModel):
     network: NetworkProfile
     storage_used_bytes: int
     storage_capacity_bytes: int
+    admitted: bool
+    admission_reasons: list[str] = Field(default_factory=list)
     derived_capacity: list[DerivedCapacity]
     observed_at: float
     resident_state: Literal[
@@ -229,8 +231,39 @@ class BackupFetchResponse(BaseModel):
 class ShutdownReceipt(BaseModel):
     node_id: str
     memory_count: int
+    replicated_memory_count: int
+    degraded_memory_count: int
     replica_count: int
     memory_ids_root: str
+    status: Literal["hardened", "local_only", "degraded"]
     created_at: str
     signature_b64: str
+
+
+class RoleMigrationRequest(BaseModel):
+    target_node_id: str = Field(min_length=8, max_length=128)
+    transfer_secret: str = Field(min_length=16, max_length=1024)
+
+
+class RoleMigrationPackage(BaseModel):
+    format: str = "neuron.role-migration/0.1"
+    role_id: str
+    source_node_id: str
+    target_node_id: str
+    salt_b64: str
+    nonce_b64: str
+    cipher_b64: str
+    created_at: str
+
+
+class RoleMigrationImport(BaseModel):
+    transfer_secret: str = Field(min_length=16, max_length=1024)
+    package: RoleMigrationPackage
+
+
+class RoleMigrationResult(BaseModel):
+    role: RoleView
+    imported_memory_count: int
+    source_node_id: str
+    target_node_id: str
 

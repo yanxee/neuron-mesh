@@ -120,3 +120,7 @@ class Database:
                 );
                 """
             )
+
+    def checkpoint(self) -> None:
+        with self.connection() as connection:
+            connection.execute("PRAGMA wal_checkpoint(FULL)")
