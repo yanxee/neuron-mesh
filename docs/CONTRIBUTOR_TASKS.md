@@ -1,5 +1,7 @@
 # Contributor Task Board
 
+[English](CONTRIBUTOR_TASKS.md) | [简体中文](CONTRIBUTOR_TASKS.zh-CN.md)
+
 These are scoped starting points for new contributors. Read [Join NeuronMesh](JOIN.md) first, then comment on or open the corresponding issue before starting a task that changes an API, benchmark claim or storage format.
 
 ## How to claim work
