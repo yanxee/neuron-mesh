@@ -73,6 +73,8 @@ All of the following must pass before a pull request is ready for review:
 
 Claims about memory persistence, fault recovery, decentralization or model quality must include a reproducible test and a clearly stated failure boundary.
 
+Architecture-impacting changes must also identify the authoritative state owner, lifecycle/idempotency behavior, compatibility and migration path, partition/failure behavior, security boundary and rollback path. Start with [ARCHITECTURE.md](ARCHITECTURE.md) and the [architecture change checklist](docs/architecture/README.md#change-checklist).
+
 Use this evidence template for experiments and benchmarks:
 
 ```text
