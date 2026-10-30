@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add the target system architecture, state-ownership and failure contracts, versioned interface inventory, threat model, quality scenarios and architecture-gated roadmap.
+
 ## 0.2.0 - 2026-10-30
 
 - Enforce minimum storage admission and reject backups that exceed pledged capacity.

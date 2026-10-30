@@ -11,6 +11,40 @@ These are scoped starting points for new contributors. Read [Join NeuronMesh](JO
 
 Tasks are not reserved until a maintainer or current claimant confirms the overlap. If an issue is quiet for 14 days and no draft exists, another contributor may ask to continue it.
 
+## Architecture-critical work
+
+These tasks implement the baseline in [ARCHITECTURE.md](../ARCHITECTURE.md). Each is intentionally larger than a good-first issue and may need to be split.
+
+### A1. Create the versioned schema pack
+
+- Convert `NodeCapability`, `CapacityLease`, `ModelManifest`, `StageManifest`, `RequestEnvelope`, `StepReceipt`, `MemoryObject`, `ReplicaManifest` and `RoleManifest` into JSON Schemas.
+- Add valid/invalid conformance fixtures and unknown-critical-field behavior.
+- Document schema migration and signature canonicalization.
+
+### A2. Build the state-machine test harness
+
+- Model request, lease, role and memory lifecycles explicitly.
+- Inject retries, expiry, stale fences, partitions and duplicate delivery.
+- Reuse scenarios from [QUALITY_SCENARIOS.md](architecture/QUALITY_SCENARIOS.md).
+
+### A3. Replace shared-token authorization
+
+- Add node authentication and namespace-scoped tenant grants.
+- Define policy epochs, revocation and short-lived leases.
+- Keep local development mode clearly separate from an external pilot.
+
+### A4. Add outbound peer-destination policy
+
+- Reject loopback, link-local, cloud metadata and other disallowed destinations.
+- Prevent credential forwarding across redirects.
+- Add an auditable SecurityEvent for blocked connections.
+
+### A5. Implement signed step and storage receipts
+
+- Define idempotent receipt IDs and canonical signatures.
+- Cover execution, storage acknowledgements, deletion and quota usage.
+- Prove duplicate retries cannot create duplicate accounting entries.
+
 ## Good first contributions
 
 ### 1. Add streamed remote inference proxy tests — [issue #1](https://github.com/yanxee/neuron-mesh/issues/1)

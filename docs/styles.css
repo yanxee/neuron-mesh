@@ -117,6 +117,16 @@ h3 { font-size: 1.16rem; }
   font-size: 0.9rem;
 }
 
+.section-note {
+  max-width: 56rem;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.compact-actions {
+  margin-top: 1.5rem;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
