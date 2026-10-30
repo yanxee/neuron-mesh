@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+title: "NeuronMesh: Decentralized LLM Network for Collaborative Inference, Persistent Memory and Continual Learning"
+message: "If you use this research prototype, please cite the project repository."
+type: software
+authors:
+  - family-names: Yan
+    given-names: Xee
+    alias: yanxee
+version: 0.2.0
+date-released: 2026-10-30
+license: MIT
+repository-code: https://github.com/yanxee/neuron-mesh
+url: https://yanxee.github.io/neuron-mesh/
+keywords:
+  - decentralized AI
+  - distributed inference
+  - large language models
+  - persistent memory
+  - continual learning
+  - peer-to-peer
+abstract: >-
+  An invite-only heterogeneous AI network prototype with capability-aware
+  routing, OpenAI-compatible ingress, encrypted persistent memory,
+  cross-failure-domain replication and virtual-role migration.

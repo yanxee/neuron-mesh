@@ -9,6 +9,7 @@
 - Add `/readyz`, status/drain CLI commands and automatic best-effort drain on graceful process shutdown.
 - Add tests for admission, local-only shutdown and cross-node role migration.
 - Add two-node process integration test to CI.
+- Add search-focused project metadata, citation file, public roadmap, contributor guide and GitHub Pages landing site.
 
 ## 0.1.0 - 2026-10-30
 

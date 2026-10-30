@@ -1,8 +1,34 @@
-# Neuron Mesh
+# NeuronMesh
 
-Neuron Mesh 是一个面向**研究型、邀请制网络**的去中心化大模型协同推理与持久记忆参考实现。
+### Open-Source Decentralized LLM Network for Collaborative Inference, Persistent Memory & Continual Learning
 
-当前版本是 `v0.2.0` 研究型 MVP，目标是提供一套可以实际启动、测试和继续扩展的工程骨架，而不是宣称已经完成公网级大模型训练网络。
+**NeuronMesh（神经元式去中心化大模型网络）** 是一个面向异构主机的开源研究项目：让电脑、服务器、手机和边缘设备按实测能力组成分布式 AI 网络，在任意节点提供模型入口，用加密记忆跨越会话与主机，在断网时自动退回本地自治。
+
+[![CI](https://github.com/yanxee/neuron-mesh/actions/workflows/ci.yml/badge.svg)](https://github.com/yanxee/neuron-mesh/actions/workflows/ci.yml)
+[![Python 3.11–3.13](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Status: Research MVP](https://img.shields.io/badge/status-research%20MVP-orange)]()
+
+> `v0.2.0` 是可运行的研究型 MVP，不是已经完成的生产级公网训练网络。实际实现边界、测试结果与后续路线均明确列在本文中。
+
+**Project website:** <https://yanxee.github.io/neuron-mesh/>
+
+**Search terms / 搜索关键词：** decentralized AI · distributed inference · large language models · LLM network · peer-to-peer AI · federated learning · continual learning · persistent memory · long-term memory · heterogeneous computing · edge AI · multi-modal AI · OpenAI-compatible API · 去中心化大模型 · 分布式推理 · 联邦学习 · 长期记忆 · 异构算力
+
+## 为什么是 NeuronMesh？
+
+NeuronMesh 关注的不是再包装一个聊天 API，而是探索大模型基础设施中四个相互关联的问题：计算、记忆、生命周期与互操作。
+
+| 常见方案 | NeuronMesh 的研究方向 |
+| --- | --- |
+| 固定云端入口与集中调度 | 任意授权节点可作为入口，由入口按需规划符合权限和时延约束的资源 |
+| GPU 型号和理论 FLOPS 决定调度 | 以持续吞吐、内存、热降频、网络、供能和信任画像动态推导强/弱神经元 |
+| 会话结束即遗忘 | 用户/组织/角色拥有独立记忆命名空间，热/温/冷分层并跨故障域复制 |
+| 主机故障导致角色消失 | 虚拟角色与物理主机解耦，支持加密导出、目标节点重加密和恢复 |
+| 断网即不可用 | 在线访问资源池，离线自动切换本地小模型和本地记忆缓存 |
+| 明文备份和全权托管 | 来源节点使用 AES-GCM 加密，承载节点只保存不可解密副本 |
+| “永不停机”式运维 | `DRAINING`、副本确认、WAL checkpoint、签名关机回执和 readiness 检查 |
+| 模型网络与空间平台强耦合 | 预留版本化 WebXR/OpenXR 空间适配层，不重写推理和记忆核心 |
 
 ## 已实现
 
