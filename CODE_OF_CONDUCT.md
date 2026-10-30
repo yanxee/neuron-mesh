@@ -1,5 +1,7 @@
 # Code of Conduct
 
+[English](CODE_OF_CONDUCT.md) | [简体中文](CODE_OF_CONDUCT.zh-CN.md)
+
 NeuronMesh is a research collaboration. We expect participants to make technical disagreement safe, specific and productive.
 
 ## Expected behavior

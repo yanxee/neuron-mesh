@@ -1,50 +1,50 @@
-name: Compatibility or deployment report
-description: Report a reproducible demo, hardware or deployment result
+name: Compatibility or deployment report / 兼容性或部署报告
+description: Report a reproducible demo, hardware or deployment result / 报告可复现的演示、硬件或部署结果
 title: "[Deployment]: "
 labels: ["documentation"]
 body:
   - type: dropdown
     id: result
     attributes:
-      label: Result
+      label: Result / 结果
       options:
-        - Demo completed successfully
-        - Partial success
-        - Failed
-        - Performance or hardware observation
+        - Demo completed successfully / 演示成功完成
+        - Partial success / 部分成功
+        - Failed / 失败
+        - Performance or hardware observation / 性能或硬件观察
     validations:
       required: true
   - type: input
     id: environment
     attributes:
-      label: Environment
-      description: OS, architecture, Python, Docker and relevant hardware; remove secrets.
-      placeholder: Windows 11, x64, Python 3.12, no Docker, 8-core CPU
+      label: Environment / 环境
+      description: OS, architecture, Python, Docker and relevant hardware; remove secrets. / 操作系统、架构、Python、Docker 和相关硬件；移除敏感信息。
+      placeholder: Windows 11, x64, Python 3.12, no Docker, 8-core CPU / Windows 11、x64、Python 3.12、无 Docker、8 核 CPU
     validations:
       required: true
   - type: textarea
     id: commands
     attributes:
-      label: Exact commands
+      label: Exact commands / 准确命令
       render: shell
     validations:
       required: true
   - type: textarea
     id: output
     attributes:
-      label: Observed result
-      description: Include the final JSON or non-secret logs and state whether the result was reproducible.
+      label: Observed result / 观测结果
+      description: Include the final JSON or non-secret logs and state whether the result was reproducible. / 包含最终 JSON 或非敏感日志，并说明结果是否可复现。
     validations:
       required: true
   - type: textarea
     id: issue
     attributes:
-      label: Unexpected behavior or blocker
-      description: Leave blank for a successful compatibility report.
+      label: Unexpected behavior or blocker / 异常行为或阻塞
+      description: Leave blank for a successful compatibility report. / 兼容性成功时可留空。
   - type: checkboxes
     id: safety
     attributes:
-      label: Data safety
+      label: Data safety / 数据安全
       options:
-        - label: I removed credentials, private memory and sensitive machine information.
+        - label: I removed credentials, private memory and sensitive machine information. / 已移除凭证、私有记忆和敏感机器信息。
           required: true

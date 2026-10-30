@@ -220,7 +220,7 @@ footer {
   .grid,
   .route-grid,
   .architecture { grid-template-columns: 1fr; }
-  .nav-links a:not(:last-child) { display: none; }
+  .nav-links a:not(:last-child):not(.language-link) { display: none; }
   section { padding: 4rem 0; }
 }
 

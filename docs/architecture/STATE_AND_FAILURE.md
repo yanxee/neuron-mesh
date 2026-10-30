@@ -1,5 +1,7 @@
 # State, Consistency and Failure Model
 
+[English](STATE_AND_FAILURE.md) | [简体中文](STATE_AND_FAILURE.zh-CN.md)
+
 **Status:** Architecture contract `v0.1`  
 **Applies to:** requests, capacity leases, memory, virtual roles, training rounds and signed receipts
 

@@ -1,5 +1,7 @@
 # Ten-Minute NeuronMesh Demo
 
+[English](DEMO.md) | [简体中文](DEMO.zh-CN.md)
+
 The demo uses two local nodes and a deterministic Echo backend. It requires no model download or GPU.
 
 ## 1. Start the nodes

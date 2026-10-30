@@ -1,5 +1,7 @@
 # Join NeuronMesh
 
+[English](JOIN.md) | [简体中文](JOIN.zh-CN.md)
+
 NeuronMesh is a runnable research prototype for capability-aware decentralized LLM inference, encrypted persistent memory and continual learning across heterogeneous hosts.
 
 It is early enough that a small, well-tested contribution can shape the architecture. It is also deliberately honest: public-internet P2P transport, real cross-node Transformer execution, federated training and production security are roadmap items, not current claims.

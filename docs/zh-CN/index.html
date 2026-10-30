@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NeuronMesh — 面向持久记忆的去中心化大模型网络</title>
+  <meta name="description" content="NeuronMesh 是开源研究网络，探索去中心化大模型推理、异构边缘计算、加密持久记忆、持续学习和 OpenAI 兼容 Agent。">
+  <meta name="keywords" content="去中心化 AI, 分布式大模型推理, 点对点 AI, 持久记忆, 长期记忆, 联邦学习, 持续学习, 异构计算, 边缘 AI, OpenAI 兼容 API">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://yanxee.github.io/neuron-mesh/zh-CN/">
+  <link rel="alternate" hreflang="en" href="https://yanxee.github.io/neuron-mesh/">
+  <link rel="alternate" hreflang="zh-CN" href="https://yanxee.github.io/neuron-mesh/zh-CN/">
+  <link rel="alternate" hreflang="x-default" href="https://yanxee.github.io/neuron-mesh/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="NeuronMesh — 去中心化大模型网络">
+  <meta property="og:description" content="跨异构主机的协作推理、加密持久记忆与持续学习。">
+  <meta property="og:url" content="https://yanxee.github.io/neuron-mesh/zh-CN/">
+  <meta property="og:site_name" content="NeuronMesh">
+  <link rel="stylesheet" href="../styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "NeuronMesh",
+    "alternateName": "神经元式去中心化大模型网络",
+    "description": "研究去中心化大模型推理、异构算力路由和加密持久记忆的开源项目。",
+    "codeRepository": "https://github.com/yanxee/neuron-mesh",
+    "url": "https://yanxee.github.io/neuron-mesh/zh-CN/",
+    "license": "https://opensource.org/licenses/MIT",
+    "programmingLanguage": ["Python", "JavaScript"],
+    "author": {
+      "@type": "Person",
+      "name": "yanxee",
+      "url": "https://github.com/yanxee"
+    }
+  }
+  </script>
+</head>
+<body>
+  <header>
+    <nav aria-label="主导航">
+      <a class="brand" href="/neuron-mesh/zh-CN/">NeuronMesh</a>
+      <div class="nav-links">
+        <a href="#capabilities">核心能力</a>
+        <a href="https://github.com/yanxee/neuron-mesh/blob/main/README.zh-CN.md#快速开始">快速开始</a>
+        <a href="join.html">参与贡献</a>
+        <a class="language-link" href="/neuron-mesh/">English</a>
+        <a href="https://github.com/yanxee/neuron-mesh">GitHub</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <span class="eyebrow">开源研究参考切片 · v0.2.0</span>
+      <h1>让异构主机组成可验证、带持久记忆的大模型网络。</h1>
+      <p class="lead">
+        NeuronMesh 将电脑、服务器和边缘设备连接为按能力调度的 AI 网格。请求可从任意授权节点进入，
+        虚拟角色可以跨主机携带加密记忆，断网节点可退回本地自治推理。
+      </p>
+      <div class="actions">
+        <a class="primary" href="https://github.com/yanxee/neuron-mesh/blob/main/README.zh-CN.md">查看中文项目说明</a>
+        <a class="secondary" href="https://github.com/yanxee/neuron-mesh/blob/main/docs/DEMO.zh-CN.md">运行双节点演示</a>
+        <a class="secondary" href="join.html">参与贡献</a>
+      </div>
+      <p class="scope">
+        这是研究原型，不宣称已经实现生产级公网 LLM 集群或物理上永久存在的记忆。
+      </p>
+    </section>
+
+    <section id="capabilities" aria-labelledby="capabilities-title">
+      <p class="eyebrow">研究方向</p>
+      <h2 id="capabilities-title">不止是另一个集中式聊天 API</h2>
+      <div class="grid">
+        <article>
+          <h3>入口侧规划</h3>
+          <p>任意受邀节点可以作为入口，模型执行是可解释、可审计的显式决策。</p>
+        </article>
+        <article>
+          <h3>异构算力</h3>
+          <p>强弱神经元由持续吞吐、内存、热限制和网络路径质量推导，而不是设备名称。</p>
+        </article>
+        <article>
+          <h3>持久记忆</h3>
+          <p>AES-GCM 内容、盲词法索引、热/温/冷分层和跨故障域加密副本。</p>
+        </article>
+        <article>
+          <h3>可迁移虚拟角色</h3>
+          <p>角色身份、命名空间和 Adapter 从物理主机解耦，可通过一次性密钥迁移。</p>
+        </article>
+        <article>
+          <h3>离线自治</h3>
+          <p>在线和离线模式明确展示能力边界，而不是静默失败。</p>
+        </article>
+        <article>
+          <h3>优雅降级</h3>
+          <p>排空、容量租约、副本确认和签名关机回执让生命周期操作可度量。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="architecture">
+      <div>
+        <p class="eyebrow">架构</p>
+        <h2>联邦式设计，显式表达失败。</h2>
+        <p class="section-note">
+          成员、发现与规划、执行、持久状态、学习和审计是分离平面。任意节点都可以成为入口，但没有全局调度器拥有所有请求。
+        </p>
+        <p class="section-note">
+          v0.2.0 是参考切片。完整目标契约、状态所有者和实现差距均公开。
+        </p>
+        <div class="actions compact-actions">
+          <a class="secondary" href="https://github.com/yanxee/neuron-mesh/blob/main/ARCHITECTURE.zh-CN.md">阅读系统架构</a>
+          <a class="secondary" href="https://github.com/yanxee/neuron-mesh/blob/main/docs/architecture/QUALITY_SCENARIOS.zh-CN.md">质量场景</a>
+        </div>
+      </div>
+      <pre aria-label="当前参考架构"><code>Agent / OpenAI 客户端
+          │
+     授权入口 ── 本地策略规划器
+          │                 │
+      加密记忆       签名节点能力索引
+          │                 │
+   跨故障域副本     远端模型提供者
+          │
+ 可选空间适配器（未来 WebXR / OpenXR）</code></pre>
+    </section>
+
+    <section class="research">
+      <p class="eyebrow">搜索与研究领域</p>
+      <h2>项目关键词</h2>
+      <ul class="tags">
+        <li>去中心化 AI</li>
+        <li>分布式推理</li>
+        <li>大语言模型</li>
+        <li>点对点系统</li>
+        <li>联邦学习</li>
+        <li>持续学习</li>
+        <li>持久记忆</li>
+        <li>长期记忆</li>
+        <li>异构计算</li>
+        <li>边缘 AI</li>
+        <li>多模态 AI</li>
+        <li>OpenAI 兼容 API</li>
+      </ul>
+    </section>
+
+    <section class="contribute">
+      <p class="eyebrow">共同建设</p>
+      <h2>带来一个有用的部分，留下可复现的结果。</h2>
+      <p>
+        无需 GPU 即可开始。运行确定性演示、认领一个有边界 Issue，或带来分布式传输、
+        模型服务、记忆、信任或空间接口方面的基准问题。所有贡献类型都有资格获得公开署名。
+      </p>
+      <div class="actions">
+        <a class="primary" href="join.html">选择参与方式</a>
+        <a class="secondary" href="https://github.com/yanxee/neuron-mesh/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">首次贡献 Issue</a>
+        <a class="secondary" href="https://github.com/yanxee/neuron-mesh/discussions">讨论研究问题</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>NeuronMesh · MIT 许可证 · <a href="https://github.com/yanxee/neuron-mesh">GitHub 仓库</a> · <a href="/neuron-mesh/">English</a></p>
+  </footer>
+</body>
+</html>

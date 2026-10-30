@@ -1,5 +1,7 @@
 # NeuronMesh Roadmap
 
+[English](ROADMAP.md) | [简体中文](ROADMAP.zh-CN.md)
+
 The roadmap is organized by architecture gates, not feature count. A gate is complete only when its contracts, automated tests and failure tests exist. Gate definitions are normative in [ARCHITECTURE.md](ARCHITECTURE.md#19-implementation-gates).
 
 ## v0.2.0 — Runnable reference slice

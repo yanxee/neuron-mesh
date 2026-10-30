@@ -1,5 +1,7 @@
 # Security Policy
 
+[English](SECURITY.md) | [简体中文](SECURITY.zh-CN.md)
+
 Neuron Mesh is a research prototype. Do not expose the default configuration to the public Internet.
 
 ## Required before an external pilot

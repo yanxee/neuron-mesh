@@ -1,5 +1,7 @@
 # Outreach Kit
 
+[English](OUTREACH.md) | [简体中文](OUTREACH.zh-CN.md)
+
 Use these materials to invite collaborators without overstating the current implementation.
 
 ## Why someone should participate
