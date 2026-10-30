@@ -61,6 +61,7 @@ HTML_PAIRS = [
     ("docs/index.html", "docs/zh-CN/index.html"),
     ("docs/join.html", "docs/zh-CN/join.html"),
 ]
+LEGAL_PAIRS = [("LICENSE", "LICENSE.zh-CN.md")]
 
 
 def _read(relative_path: str) -> str:
@@ -92,6 +93,8 @@ def test_every_public_markdown_file_has_a_language_partner() -> None:
         for path in pair
     }
     expected.add(ROOT / ".github" / "PULL_REQUEST_TEMPLATE.md")
+    expected = {path for path in expected if path.suffix == ".md"}
+    expected.update(ROOT / path for pair in LEGAL_PAIRS for path in pair if path.endswith(".md"))
     actual = {
         path
         for path in ROOT.rglob("*.md")
@@ -147,3 +150,7 @@ def test_public_website_has_language_variants() -> None:
         if 'hreflang="en"' not in chinese_text:
             missing.append(f"{chinese} lacks en hreflang")
     assert missing == [], "\n".join(missing)
+
+
+def test_legal_license_pair_exists() -> None:
+    assert all((ROOT / path).is_file() for pair in LEGAL_PAIRS for path in pair)
