@@ -27,6 +27,9 @@ def test_graph_dashboard_exposes_roles_relations_and_activity(tmp_path: Path) ->
         assert "fleet50" in page.text
         assert "buildFleetPlan" in page.text
         assert "redundancy_peer_ids" in page.text
+        assert "taskTemplates" in page.text
+        assert "activateDemoTask" in page.text
+        assert "event.targets" in page.text
 
         assert client.get("/v1/observability/graph").status_code == 401
         assert client.get("/v1/roles/summary").status_code == 401

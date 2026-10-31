@@ -21,7 +21,7 @@
 
 **Search terms:** decentralized AI · distributed inference · large language models · LLM network · peer-to-peer AI · federated learning · continual learning · persistent memory · long-term memory · heterogeneous computing · edge AI · multi-modal AI · OpenAI-compatible API · 去中心化大模型 · 分布式推理 · 联邦学习 · 长期记忆 · 异构算力
 
-![NeuronMesh 50-host fleet graph with hardware and Agent details](docs/assets/fleet50-dashboard.png)
+![NeuronMesh 50-host fleet graph with multi-host task fan-out, hardware and Agent details](docs/assets/fleet50-dashboard.png)
 
 ## Help build the measurable network
 
@@ -112,6 +112,8 @@ Architecture documents:
 - Obsidian-style live graph of hosts, virtual roles and node-to-node activity;
 - a deterministic 50-host join animation with hardware, compute, capabilities,
   Agent roles and cross-failure-domain redundancy previews;
+- task-driven one-to-many compute fan-out with visible subtask assignment across
+  heterogeneous hosts and failure domains;
 - animated relation lines for discovery, remote compute and encrypted-storage support.
 
 ## Not implemented yet
@@ -158,6 +160,8 @@ The graph asks for the configured bearer token and keeps it in tab memory only. 
 `python scripts/graph_demo.py --open` for a populated two-node demonstration.
 Open <http://127.0.0.1:8000/graph?demo=fleet50> for a browser-generated 50-host
 fleet rehearsal. This visual simulation does not claim that 50 real nodes exist.
+The rehearsal also cycles through five task objectives and selects 7–9 compatible
+hosts for each decomposed plan.
 
 ## Operations
 

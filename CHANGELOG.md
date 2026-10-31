@@ -9,6 +9,8 @@
 - Add an Obsidian-style live graph for hosts, virtual roles and short-lived cross-node activity.
 - Add a deterministic 50-host fleet-join visualization with hardware, compute,
   capability, Agent-role and cross-failure-domain redundancy details.
+- Add task-driven one-to-many scheduling views with decomposable objectives and
+  multi-target activity pulses across heterogeneous hosts.
 
 ## 0.2.0 - 2026-10-30
 

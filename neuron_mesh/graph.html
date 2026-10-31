@@ -199,6 +199,7 @@
     .swatch { width: 8px; height: 8px; border-radius: 50%; }
     .swatch.green { background: var(--green); }
     .swatch.blue { background: var(--blue); }
+    .swatch.cyan { background: #69e4ff; }
     .swatch.orange { background: #f3a65a; }
     .swatch.purple { background: var(--purple); }
     .swatch.amber { background: var(--amber); }
@@ -235,7 +236,7 @@
     .detail-name { margin: 0 0 0.25rem; font-size: 1rem; }
     .detail-type { color: var(--muted); font-size: 0.75rem; }
     .detail-grid { display: grid; grid-template-columns: 1fr auto; gap: 0.45rem 0.8rem; margin-top: 0.8rem; font-size: 0.78rem; }
-    .detail-grid dt { color: var(--muted); }
+    .detail-grid dt { color: var(--muted); white-space: nowrap; word-break: keep-all; }
     .detail-grid dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
     .detail-group { margin-top: 0.9rem; }
     .detail-group h4 {
@@ -268,6 +269,21 @@
       margin-top: 0.2rem;
       color: var(--muted);
       font-size: 0.68rem;
+      line-height: 1.45;
+    }
+    .detail-task-step {
+      padding: 0.58rem 0.62rem;
+      border: 1px solid rgba(105, 228, 255, 0.18);
+      border-radius: 10px;
+      background: rgba(105, 228, 255, 0.055);
+    }
+    .detail-task-step + .detail-task-step { margin-top: 0.42rem; }
+    .detail-task-step strong { display: block; font-size: 0.74rem; }
+    .detail-task-step span {
+      display: block;
+      margin-top: 0.18rem;
+      color: var(--muted);
+      font-size: 0.67rem;
       line-height: 1.45;
     }
 
@@ -401,6 +417,7 @@
           <span class="legend-item"><i class="swatch blue"></i><span data-i18n="balancedHost">Balanced host</span></span>
           <span class="legend-item"><i class="swatch orange"></i><span data-i18n="weakHost">Weak host</span></span>
           <span class="legend-item"><i class="swatch purple"></i><span data-i18n="role">Virtual role</span></span>
+          <span class="legend-item"><i class="swatch cyan"></i><span data-i18n="taskHub">Task hub</span></span>
           <span class="legend-item"><i class="swatch backup"></i><span data-i18n="redundancyEdge">Redundant backup</span></span>
           <span class="legend-item"><i class="swatch amber"></i><span data-i18n="activityLine">Activity pulse</span></span>
         </div>
@@ -456,6 +473,7 @@
           balancedHost: "Balanced host",
           weakHost: "Weak host",
           role: "Virtual role",
+          taskHub: "Task hub",
           redundancyEdge: "Redundant backup",
           activityLine: "Activity pulse",
           joiningHosts: "Joining virtual hosts",
@@ -495,6 +513,17 @@
           currentTask: "Current task",
           status: "Status",
           host: "Host",
+          taskType: "Task orchestrator",
+          objective: "Objective",
+          taskStatus: "Task status",
+          participants: "Participating hosts",
+          computeBudget: "Participant capacity",
+          coordinator: "Lead host",
+          taskPlan: "Task decomposition",
+          subtasks: "subtasks",
+          activeTask: "Active task",
+          subtask: "Assigned stage",
+          contribution: "Contribution",
           roleStatus: "Role status",
           roleHosts: "Hosted by",
           joinActivity: "Host joined",
@@ -503,6 +532,7 @@
           storageActivity: "Encrypted storage",
           backupActivity: "Redundant backup",
           roleActivity: "Role activity",
+          taskPulse: "Multi-host task",
           secondsAgo: "s ago",
         },
         zh: {
@@ -522,6 +552,7 @@
           balancedHost: "均衡神经元",
           weakHost: "弱神经元",
           role: "虚拟角色",
+          taskHub: "任务中枢",
           redundancyEdge: "冗余备份",
           activityLine: "活动脉冲",
           joiningHosts: "虚拟主机加入中",
@@ -561,6 +592,17 @@
           currentTask: "当前任务",
           status: "状态",
           host: "承载主机",
+          taskType: "任务编排器",
+          objective: "计算目标",
+          taskStatus: "任务状态",
+          participants: "参与主机",
+          computeBudget: "参与算力",
+          coordinator: "主控主机",
+          taskPlan: "任务拆解",
+          subtasks: "个子任务",
+          activeTask: "当前任务",
+          subtask: "负责阶段",
+          contribution: "资源贡献",
           roleStatus: "角色状态",
           roleHosts: "承载主机",
           joinActivity: "主机加入",
@@ -569,6 +611,7 @@
           storageActivity: "加密存储",
           backupActivity: "冗余备份",
           roleActivity: "角色活动",
+          taskPulse: "多主机协同任务",
           secondsAgo: "秒前",
         }
       };
@@ -576,6 +619,7 @@
       const colors = {
         green: "#31e6a1",
         blue: "#5ebcff",
+        cyan: "#69e4ff",
         orange: "#f3a65a",
         purple: "#c796ff",
         amber: "#ffc56e",
@@ -588,6 +632,7 @@
         storage: "#ffc56e",
         backup: "#ffc56e",
         role: "#c796ff",
+        task: "#69e4ff",
       };
       const params = new URLSearchParams(window.location.search);
       const demoMode = ["fleet50", "50"].includes((params.get("demo") || "").toLowerCase());
@@ -617,6 +662,9 @@
       let demoPulseIndex = 0;
       let demoGeneration = 0;
       let simulationPaused = false;
+      let activeTaskNodeId = null;
+      let activeTaskIndex = 0;
+      let activeTaskStageIndex = 0;
 
       const canvas = document.getElementById("graphCanvas");
       const ctx = canvas.getContext("2d");
@@ -642,6 +690,9 @@
         document.getElementById("languageButton").textContent = language === "zh" ? "EN" : "中文";
         document.querySelectorAll("[data-i18n]").forEach((element) => {
           element.textContent = t(element.dataset.i18n);
+        });
+        nodes.filter((node) => node.kind === "task" && node.title).forEach((node) => {
+          node.label = `${node.code} · ${localizedText(node.title)}`;
         });
         if (demoMode && current) {
           setStatus("live", t("syntheticMode"));
@@ -680,6 +731,7 @@
 
       function radiusForNode(node) {
         if (node.kind === "role") return node.is_local ? 5.5 : 5;
+        if (node.kind === "task") return 15;
         if (node.is_local) return 16;
         if (node.capacity_tier === "strong") return 11.5;
         if (node.capacity_tier === "balanced") return 9.5;
@@ -812,6 +864,217 @@
           relay: { en: "Relay", zh: "中继" },
           "sleep-cycle": { en: "Sleep cycle", zh: "休眠周期" },
         };
+        const taskTemplates = [
+          {
+            code: "T1",
+            title: {
+              en: "Long-context research synthesis",
+              zh: "长上下文研究综合",
+            },
+            objective: {
+              en: "Answer a cross-document question from distributed memory, visual evidence and sharded model workers.",
+              zh: "利用分布式记忆、视觉证据和模型分片，回答跨文档研究问题。",
+            },
+            stages: [
+              {
+                name: { en: "Plan and parallel reasoning", zh: "规划与并行推理" },
+                capability: "full-model",
+                slots: 2,
+                contribution: { en: "reasoning shard", zh: "推理分片" },
+              },
+              {
+                name: { en: "Retrieve long-term memory", zh: "召回长期记忆" },
+                capability: "cache",
+                slots: 2,
+                contribution: { en: "memory retrieval", zh: "记忆召回" },
+              },
+              {
+                name: { en: "Extract visual evidence", zh: "提取视觉证据" },
+                capability: "vision",
+                slots: 1,
+                contribution: { en: "vision inference", zh: "视觉推理" },
+              },
+              {
+                name: { en: "Redact private context", zh: "隐私语境脱敏" },
+                capability: "redaction",
+                slots: 1,
+                contribution: { en: "privacy filter", zh: "隐私过滤" },
+              },
+              {
+                name: { en: "Verify and checkpoint", zh: "校验并创建检查点" },
+                capability: "checkpoint",
+                slots: 1,
+                contribution: { en: "verification and backup", zh: "校验与备份" },
+              },
+            ],
+          },
+          {
+            code: "T2",
+            title: {
+              en: "Multimodal world understanding",
+              zh: "多模态世界理解",
+            },
+            objective: {
+              en: "Fuse edge sensor streams, vision, private context and distributed inference into a verified scene graph.",
+              zh: "融合边缘传感器、视觉、隐私语境和分布式推理，生成经过校验的场景图。",
+            },
+            stages: [
+              {
+                name: { en: "Capture edge events", zh: "采集边缘事件" },
+                capability: "sensor",
+                slots: 2,
+                contribution: { en: "sensor stream", zh: "传感器数据流" },
+              },
+              {
+                name: { en: "Understand visual frames", zh: "理解视觉画面" },
+                capability: "vision",
+                slots: 2,
+                contribution: { en: "vision encoding", zh: "视觉编码" },
+              },
+              {
+                name: { en: "Run model shards", zh: "运行模型分片" },
+                capability: "model-shard",
+                slots: 2,
+                contribution: { en: "model shard", zh: "模型分片" },
+              },
+              {
+                name: { en: "Merge and reason", zh: "融合与推理" },
+                capability: "inference",
+                slots: 1,
+                contribution: { en: "fusion inference", zh: "融合推理" },
+              },
+              {
+                name: { en: "Relay spatial result", zh: "中继空间结果" },
+                capability: "relay",
+                slots: 1,
+                contribution: { en: "spatial relay", zh: "空间中继" },
+              },
+            ],
+          },
+          {
+            code: "T3",
+            title: {
+              en: "Continual learning checkpoint",
+              zh: "持续学习检查点",
+            },
+            objective: {
+              en: "Train, validate and durably checkpoint a local adapter without creating a single centralized training domain.",
+              zh: "在避免单一中心训练域的前提下，完成本地适配器训练、验证和持久检查点。",
+            },
+            stages: [
+              {
+                name: { en: "Train adapter shards", zh: "训练适配器分片" },
+                capability: "training",
+                slots: 2,
+                contribution: { en: "adapter training", zh: "适配器训练" },
+              },
+              {
+                name: { en: "Accelerate gradients", zh: "加速梯度计算" },
+                capability: "gpu",
+                slots: 2,
+                contribution: { en: "GPU acceleration", zh: "GPU 加速" },
+              },
+              {
+                name: { en: "Run regression checks", zh: "运行回归检查" },
+                capability: "inference",
+                slots: 2,
+                contribution: { en: "quality regression", zh: "质量回归" },
+              },
+              {
+                name: { en: "Commit durable checkpoints", zh: "写入持久检查点" },
+                capability: "checkpoint",
+                slots: 2,
+                contribution: { en: "checkpoint replica", zh: "检查点副本" },
+              },
+              {
+                name: { en: "Warm shared memory", zh: "预热共享记忆" },
+                capability: "cache",
+                slots: 1,
+                contribution: { en: "warm memory cache", zh: "热记忆缓存" },
+              },
+            ],
+          },
+          {
+            code: "T4",
+            title: {
+              en: "Resilient edge response",
+              zh: "弹性边缘响应",
+            },
+            objective: {
+              en: "Respond to disconnected edge conditions using nearby sensors, relays and fallback inference providers.",
+              zh: "利用邻近传感器、中继和回退推理节点，应对边缘断网场景。",
+            },
+            stages: [
+              {
+                name: { en: "Observe local conditions", zh: "观察本地状态" },
+                capability: "sensor",
+                slots: 2,
+                contribution: { en: "local observation", zh: "本地观测" },
+              },
+              {
+                name: { en: "Select resilient route", zh: "选择弹性路由" },
+                capability: "routing",
+                slots: 1,
+                contribution: { en: "route planning", zh: "路由规划" },
+              },
+              {
+                name: { en: "Maintain fallback relay", zh: "维持回退中继" },
+                capability: "relay",
+                slots: 1,
+                contribution: { en: "fallback relay", zh: "回退中继" },
+              },
+              {
+                name: { en: "Run compact inference", zh: "运行紧凑推理" },
+                capability: "inference",
+                slots: 2,
+                contribution: { en: "compact inference", zh: "紧凑推理" },
+              },
+              {
+                name: { en: "Apply privacy boundary", zh: "执行隐私边界" },
+                capability: "redaction",
+                slots: 1,
+                contribution: { en: "edge redaction", zh: "边缘脱敏" },
+              },
+            ],
+          },
+          {
+            code: "T5",
+            title: {
+              en: "Cross-domain memory repair",
+              zh: "跨故障域记忆修复",
+            },
+            objective: {
+              en: "Rebuild missing ciphertext replicas and verify durable recall across independent failure domains.",
+              zh: "在独立故障域之间重建缺失的密文副本，并验证持久召回。",
+            },
+            stages: [
+              {
+                name: { en: "Locate memory fragments", zh: "定位记忆碎片" },
+                capability: "cache",
+                slots: 3,
+                contribution: { en: "fragment lookup", zh: "碎片检索" },
+              },
+              {
+                name: { en: "Create verified replicas", zh: "创建校验副本" },
+                capability: "checkpoint",
+                slots: 2,
+                contribution: { en: "verified replica", zh: "校验副本" },
+              },
+              {
+                name: { en: "Reconnect remote domains", zh: "重连远端故障域" },
+                capability: "relay",
+                slots: 2,
+                contribution: { en: "cross-domain relay", zh: "跨域中继" },
+              },
+              {
+                name: { en: "Reconstruct final context", zh: "重建最终上下文" },
+                capability: "full-model",
+                slots: 1,
+                contribution: { en: "context reconstruction", zh: "上下文重建" },
+              },
+            ],
+          },
+        ];
 
         const hosts = [];
         const roles = [];
@@ -921,6 +1184,7 @@
           hostsById: new Map(hosts.map((host) => [host.id, host])),
           nodesById: new Map([...hosts, ...roles].map((node) => [node.id, node])),
           capabilityNames,
+          taskTemplates,
         };
       }
 
@@ -941,12 +1205,22 @@
         }).format(value);
       }
 
+      function localizedText(value) {
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          return value[language] || value.en || value.zh || "";
+        }
+        return value == null ? "" : String(value);
+      }
+
       function addDemoActivity(source, target, kind, detail = "") {
         const now = Date.now() / 1000 + clockOffset;
+        const targets = (Array.isArray(target) ? target : [target]).filter(Boolean);
+        if (!targets.length) return;
         activities.push({
           id: `demo-${demoGeneration}-${demoPulseIndex}-${Math.round(now * 1000)}`,
           source,
-          target,
+          target: targets[0],
+          targets,
           kind,
           detail,
           occurred_at: now,
@@ -1016,6 +1290,165 @@
         panY = height / 2 - ((bounds.minY + bounds.maxY) / 2) * scale;
       }
 
+      function pickTaskAssignments(task, cycle) {
+        const availableHosts = nodes.filter(
+          (node) => node.kind === "host" && node.online !== false,
+        );
+        const usedHosts = new Set();
+        const domainsInUse = new Map();
+        const assignments = [];
+        for (let stageIndex = 0; stageIndex < task.stages.length; stageIndex += 1) {
+          const stage = task.stages[stageIndex];
+          for (let slot = 0; slot < stage.slots; slot += 1) {
+            const candidates = availableHosts
+              .filter(
+                (host) =>
+                  !usedHosts.has(host.id) &&
+                  host.capabilities?.includes(stage.capability),
+              )
+              .map((host) => {
+                const domainCount = domainsInUse.get(host.failure_domain) || 0;
+                const jitter = (Number(host.node_id.split("-").pop()) * 17 +
+                  cycle * 11 + stageIndex * 7) % 29;
+                return {
+                  host,
+                  score:
+                    Number(host.compute_tflops || 0) * 0.7 -
+                    Number(host.rtt_ms || 100) * 1.1 +
+                    jitter +
+                    (domainCount === 0 ? 420 : -domainCount * 90),
+                };
+              })
+              .sort((a, b) => b.score - a.score);
+            const selected = candidates[0]?.host;
+            if (!selected) continue;
+            usedHosts.add(selected.id);
+            domainsInUse.set(
+              selected.failure_domain,
+              (domainsInUse.get(selected.failure_domain) || 0) + 1,
+            );
+            assignments.push({
+              stage_index: stageIndex,
+              slot_index: slot,
+              stage_name: stage.name,
+              capability: stage.capability,
+              host_id: selected.id,
+              contribution: stage.contribution,
+            });
+          }
+        }
+        return assignments;
+      }
+
+      function chooseTaskPosition(hostNodes) {
+        const width = canvas.clientWidth || 800;
+        const height = canvas.clientHeight || 600;
+        const candidates = [
+          [0.2, 0.25],
+          [0.5, 0.17],
+          [0.8, 0.25],
+          [0.2, 0.68],
+          [0.8, 0.68],
+          [0.5, 0.82],
+        ];
+        let best = candidates[0];
+        let bestClearance = -Infinity;
+        for (const candidate of candidates) {
+          const screenX = width * candidate[0];
+          const screenY = height * candidate[1];
+          const clearance = hostNodes.reduce((minimum, node) => {
+            const nodeScreenX = node.x * scale + panX;
+            const nodeScreenY = node.y * scale + panY;
+            return Math.min(
+              minimum,
+              Math.hypot(nodeScreenX - screenX, nodeScreenY - screenY),
+            );
+          }, Infinity);
+          if (clearance > bestClearance) {
+            best = candidate;
+            bestClearance = clearance;
+          }
+        }
+        return {
+          x: (width * best[0] - panX) / scale,
+          y: (height * best[1] - panY) / scale,
+        };
+      }
+
+      function activateDemoTask(index) {
+        if (!demoMode || !demoPlan) return;
+        const taskTemplates = demoPlan.taskTemplates;
+        const task = taskTemplates[index % taskTemplates.length];
+        const assignments = pickTaskAssignments(task, index);
+        const participants = [...new Set(assignments.map((item) => item.host_id))];
+        if (participants.length < 2) return;
+        const previousTaskId = activeTaskNodeId;
+        const selectionFollowsTask = !selectedId || selectedId === previousTaskId;
+        if (previousTaskId) {
+          nodes = nodes.filter((node) => node.id !== previousTaskId);
+          edges = edges.filter(
+            (edge) => edge.source !== previousTaskId && edge.target !== previousTaskId,
+          );
+          activities = activities.filter((event) => event.source !== previousTaskId);
+        }
+
+        const now = Date.now() / 1000 + clockOffset;
+        const taskId = `task:${demoGeneration}:${index}`;
+        const hostNodes = nodes.filter((node) => node.kind === "host");
+        const position = chooseTaskPosition(hostNodes);
+        const participantCapacity = participants.reduce(
+          (total, hostId) => total + Number(demoPlan.hostsById.get(hostId)?.compute_tflops || 0),
+          0,
+        );
+        const coordinator = participants
+          .map((hostId) => demoPlan.hostsById.get(hostId))
+          .sort((a, b) => Number(b?.compute_tflops || 0) - Number(a?.compute_tflops || 0))[0];
+        const taskNode = {
+          id: taskId,
+          kind: "task",
+          code: task.code,
+          title: task.title,
+          objective: task.objective,
+          label: `${task.code} · ${localizedText(task.title)}`,
+          status: "running",
+          assignments,
+          participant_ids: participants,
+          compute_tflops: participantCapacity,
+          coordinator_id: coordinator?.id || participants[0],
+          started_at: now,
+          joined_at: now,
+          reveal_at: now,
+          pinned_x: position.x,
+          pinned_y: position.y,
+          x: position.x,
+          y: position.y,
+          vx: 0,
+          vy: 0,
+          radius: radiusForNode({ kind: "task" }),
+        };
+        nodes.push(taskNode);
+        participants.forEach((hostId) => {
+          edges.push({
+            id: `task-edge:${taskId}:${hostId}`,
+            source: taskId,
+            target: hostId,
+            kind: "task",
+          });
+        });
+        activeTaskNodeId = taskId;
+        activeTaskIndex = index;
+        activeTaskStageIndex = 0;
+        if (selectionFollowsTask) {
+          selectedId = taskId;
+          renderDetails();
+        }
+        addDemoActivity(taskId, participants, "task", {
+          en: `${assignments.length} subtasks dispatched to ${participants.length} hosts`,
+          zh: `已向 ${participants.length} 台主机派发 ${assignments.length} 个子任务`,
+        });
+        updateDashboardMetrics();
+      }
+
       function joinDemoHost(index, generation) {
         if (generation !== demoGeneration || !demoPlan) return;
         const sourceHost = demoPlan.hosts[index];
@@ -1080,35 +1513,49 @@
             fitGraph();
             simulationPaused = true;
           }, 4800));
+          demoTimers.push(window.setTimeout(() => {
+            activateDemoTask(0);
+            fitGraph();
+          }, 5600));
         }
       }
 
       function demoPulse() {
         if (!demoMode || demoJoined < DEMO_HOST_COUNT || !demoPlan) return;
-        const activeHostIds = new Set(
-          nodes.filter((node) => node.kind === "host").map((node) => node.id),
-        );
-        const hosts = demoPlan.hosts.filter((host) => activeHostIds.has(host.id));
-        if (!hosts.length) return;
-        const source = hosts[demoPulseIndex % hosts.length];
-        const backups = source.redundancy_peer_ids.filter((id) => activeHostIds.has(id));
-        const targetId = backups.length
-          ? backups[demoPulseIndex % backups.length]
-          : hosts[(demoPulseIndex + 9) % hosts.length]?.id;
-        if (!targetId || targetId === source.id) return;
-        const cycle = demoPulseIndex % 5;
-        const kind = cycle === 2 ? "storage" : cycle === 4 ? "backup" : "compute";
-        const target = demoPlan.hostsById.get(targetId);
-        addDemoActivity(
-          source.id,
-          targetId,
-          kind,
-          kind === "storage"
-            ? "encrypted replica"
-            : kind === "backup"
-              ? `${source.failure_domain} ↔ ${target?.failure_domain || "peer"}`
-              : `${formatNumber(Math.min(source.compute_tflops, target?.compute_tflops || 1))} TF`,
-        );
+        const task = nodeById(activeTaskNodeId);
+        if (!task) return;
+        const now = Date.now() / 1000 + clockOffset;
+        if (now - task.started_at > 12) {
+          activateDemoTask(activeTaskIndex + 1);
+          return;
+        }
+        const stageGroups = [...new Set(task.assignments.map((item) => item.stage_index))]
+          .map((stageIndex) =>
+            task.assignments.filter((item) => item.stage_index === stageIndex),
+          );
+        if (!stageGroups.length) return;
+        activeTaskStageIndex = (activeTaskStageIndex + 1) % stageGroups.length;
+        let group = stageGroups[activeTaskStageIndex];
+        let targets = [...new Set(group.map((item) => item.host_id))];
+        if (targets.length < 2) {
+          const nextGroup = stageGroups[(activeTaskStageIndex + 1) % stageGroups.length];
+          targets = [...new Set([
+            ...targets,
+            ...nextGroup.map((item) => item.host_id),
+          ])];
+        }
+        if (demoPulseIndex % 5 === 0) {
+          addDemoActivity(task.id, task.participant_ids, "task", {
+            en: `Full plan active · ${task.compute_tflops.toFixed(0)} TF available`,
+            zh: `完整任务图执行中 · 可用算力 ${task.compute_tflops.toFixed(0)} TF`,
+          });
+          return;
+        }
+        const stageName = group[0]?.stage_name;
+        addDemoActivity(task.id, targets, "task", {
+          en: `${stageName?.en || stageName || "Task stage"} · ${targets.length} workers`,
+          zh: `${stageName?.zh || stageName || "任务阶段"} · ${targets.length} 台主机并行`,
+        });
       }
 
       function clearDemoRun() {
@@ -1137,6 +1584,9 @@
         demoJoined = 0;
         demoPulseIndex = 0;
         simulationPaused = false;
+        activeTaskNodeId = null;
+        activeTaskIndex = 0;
+        activeTaskStageIndex = 0;
         demoPlan = buildFleetPlan();
         clockOffset = 0;
         scale = 1;
@@ -1353,14 +1803,18 @@
 
         const title = document.createElement("h3");
         title.className = "detail-name";
-        title.textContent = node.label;
+        title.textContent = node.kind === "task"
+          ? localizedText(node.title)
+          : node.label;
         const type = document.createElement("div");
         type.className = "detail-type";
-        type.textContent = node.kind === "role"
-          ? t("virtualRole")
-          : node.is_local
-            ? t("localHost")
-            : t("peerHost");
+        type.textContent = node.kind === "task"
+          ? `${t("taskType")} · ${node.code}`
+          : node.kind === "role"
+            ? t("virtualRole")
+            : node.is_local
+              ? t("localHost")
+              : t("peerHost");
         const grid = document.createElement("dl");
         grid.className = "detail-grid";
 
@@ -1371,6 +1825,13 @@
           if (node.agent?.model) rows.push([t("agentModel"), node.agent.model]);
           if (node.agent?.autonomy) rows.push([t("autonomy"), node.agent.autonomy]);
           if (node.agent?.task) rows.push([t("currentTask"), node.agent.task]);
+        } else if (node.kind === "task") {
+          rows.push([t("objective"), localizedText(node.objective)]);
+          rows.push([t("taskStatus"), node.status]);
+          rows.push([t("participants"), String(node.participant_ids?.length || 0)]);
+          rows.push([t("computeBudget"), `${formatNumber(node.compute_tflops)} TFLOPS`]);
+          rows.push([t("coordinator"), labelForNodeId(node.coordinator_id)]);
+          rows.push([t("subtasks"), String(node.assignments?.length || 0)]);
         } else {
           rows.push([t("device"), node.device_class || "unknown"]);
           rows.push([t("tier"), node.capacity_tier || "unknown"]);
@@ -1390,6 +1851,15 @@
           if (node.redundancy_peer_ids?.length) {
             rows.push([t("redundancy"), String(node.redundancy_peer_ids.length)]);
           }
+          const activeTask = activeTaskNodeId ? nodeById(activeTaskNodeId) : null;
+          const assignment = activeTask?.assignments?.find(
+            (item) => item.host_id === node.id,
+          );
+          if (assignment) {
+            rows.push([t("activeTask"), localizedText(activeTask.title)]);
+            rows.push([t("subtask"), localizedText(assignment.stage_name)]);
+            rows.push([t("contribution"), localizedText(assignment.contribution)]);
+          }
         }
         for (const [label, value] of rows) {
           const dt = document.createElement("dt");
@@ -1399,6 +1869,24 @@
           grid.append(dt, dd);
         }
         container.append(title, type, grid);
+
+        if (node.kind === "task" && node.assignments?.length) {
+          const section = appendDetailGroup(container, t("taskPlan"));
+          node.assignments.forEach((assignment) => {
+            const step = document.createElement("div");
+            step.className = "detail-task-step";
+            const stage = document.createElement("strong");
+            const slotTotal = node.assignments.filter(
+              (item) => item.stage_index === assignment.stage_index,
+            ).length;
+            const slotLabel = slotTotal > 1 ? ` ${assignment.slot_index + 1}/${slotTotal}` : "";
+            stage.textContent = `${localizedText(assignment.stage_name)}${slotLabel}`;
+            const detail = document.createElement("span");
+            detail.textContent = `${labelForNodeId(assignment.host_id)} · ${localizedText(assignment.contribution)} · ${capabilityLabel(assignment.capability)}`;
+            step.append(stage, detail);
+            section.append(step);
+          });
+        }
 
         if (node.kind === "host" && node.capabilities?.length) {
           const section = appendDetailGroup(container, t("capabilities"));
@@ -1451,6 +1939,7 @@
           storage: t("storageActivity"),
           backup: t("backupActivity"),
           role: t("roleActivity"),
+          task: t("taskPulse"),
         }[kind] || kind;
       }
 
@@ -1478,8 +1967,12 @@
           title.textContent = activityLabel(event.kind);
           const detail = document.createElement("span");
           const sourceName = nodeById(event.source)?.label || event.source;
-          const targetName = nodeById(event.target)?.label || event.target;
-          detail.textContent = `${sourceName} → ${targetName}${event.detail ? ` · ${event.detail}` : ""}`;
+          const targets = event.targets || [event.target];
+          const targetName = targets.length > 1
+            ? `${targets.length} ${t("hosts")}`
+            : nodeById(targets[0])?.label || targets[0];
+          const localizedDetail = localizedText(event.detail);
+          detail.textContent = `${sourceName} → ${targetName}${localizedDetail ? ` · ${localizedDetail}` : ""}`;
           content.append(title, detail);
           const time = document.createElement("time");
           time.className = "activity-time";
@@ -1502,6 +1995,7 @@
           for (let j = i + 1; j < nodes.length; j += 1) {
             const a = nodes[i];
             const b = nodes[j];
+            if (a.kind === "task" || b.kind === "task") continue;
             const hostedPair =
               (a.kind === "role" && a.hosts?.includes(b.id)) ||
               (b.kind === "role" && b.hosts?.includes(a.id));
@@ -1520,6 +2014,7 @@
           }
         }
         for (const edge of edges) {
+          if (edge.kind === "task") continue;
           const a = nodeById(edge.source);
           const b = nodeById(edge.target);
           if (!a || !b) continue;
@@ -1542,6 +2037,13 @@
           b.fy -= fy;
         }
         for (const node of nodes) {
+          if (node.kind === "task") {
+            node.x = node.pinned_x;
+            node.y = node.pinned_y;
+            node.vx = 0;
+            node.vy = 0;
+            continue;
+          }
           node.vx = (node.vx + node.fx * delta) * 0.86;
           node.vy = (node.vy + node.fy * delta) * 0.86;
           node.vx = Math.max(-4, Math.min(4, node.vx));
@@ -1574,6 +2076,7 @@
       function activityDuration(kind) {
         if (kind === "join") return 1.35;
         if (kind === "discovery" || kind === "role") return 2.4;
+        if (kind === "task") return 3.1;
         if (kind === "backup") return 3.2;
         return 4.2;
       }
@@ -1587,7 +2090,11 @@
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
-        if (edge.kind === "hosts") {
+        if (edge.kind === "task") {
+          ctx.strokeStyle = `rgba(105, 228, 255, ${highlighted ? 0.42 : 0.1})`;
+          ctx.lineWidth = highlighted ? 1.35 : 0.8;
+          ctx.setLineDash([6, 5]);
+        } else if (edge.kind === "hosts") {
           ctx.strokeStyle = `rgba(199, 150, 255, ${highlighted ? 0.24 : 0.08})`;
           ctx.lineWidth = highlighted ? 1 : 0.65;
           ctx.setLineDash([2, 5]);
@@ -1609,46 +2116,57 @@
         const duration = activityDuration(event.kind);
         if (age > duration) return;
         const a = nodeById(event.source);
-        const b = nodeById(event.target);
-        if (!a || !b) return;
+        if (!a) return;
+        const targets = (event.targets || [event.target])
+          .map((targetId) => nodeById(targetId))
+          .filter(Boolean);
+        if (!targets.length) return;
         const color = kindColors[event.kind] || colors.green;
         const life = 1 - age / duration;
         const flicker = 0.55 + 0.45 * Math.abs(Math.sin(now * 6 + index));
         ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.strokeStyle = color;
-        ctx.globalAlpha = Math.max(0.12, life * flicker);
-        ctx.lineWidth = 1.5 + 3 * life;
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 16 * life;
-        ctx.stroke();
+        targets.forEach((b, targetIndex) => {
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = color;
+          ctx.globalAlpha = Math.max(0.12, life * flicker);
+          ctx.lineWidth = 1.5 + 3 * life;
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 16 * life;
+          ctx.stroke();
 
-        const progress = ((now * 0.65 + (index + 1) * 0.19) % 1);
-        const x = a.x + (b.x - a.x) * progress;
-        const y = a.y + (b.y - a.y) * progress;
-        ctx.beginPath();
-        ctx.arc(x, y, 2.2 + life * 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.globalAlpha = life;
-        ctx.fill();
+          const progress = ((now * 0.65 + (index + 1) * 0.19 +
+            targetIndex * 0.11) % 1);
+          const x = a.x + (b.x - a.x) * progress;
+          const y = a.y + (b.y - a.y) * progress;
+          ctx.beginPath();
+          ctx.arc(x, y, 2.2 + life * 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.globalAlpha = life;
+          ctx.fill();
+        });
         ctx.restore();
       }
 
       function drawNode(node, now) {
         if (node.reveal_at && node.reveal_at > now) return;
         const selected = node.id === selectedId || node.id === hoveredId;
-        const color = node.kind === "role"
-          ? colors.purple
-          : node.capacity_tier === "strong"
-            ? colors.green
-            : node.capacity_tier === "balanced"
-              ? colors.blue
-              : colors.orange;
+        const color = node.kind === "task"
+          ? colors.cyan
+          : node.kind === "role"
+            ? colors.purple
+            : node.capacity_tier === "strong"
+              ? colors.green
+              : node.capacity_tier === "balanced"
+                ? colors.blue
+                : colors.orange;
         const active = activities.some(
-          (event) => now - event.occurred_at < activityDuration(event.kind) &&
-            (event.source === node.id || event.target === node.id),
+          (event) => {
+            if (now - event.occurred_at >= activityDuration(event.kind)) return false;
+            const targets = event.targets || [event.target];
+            return event.source === node.id || targets.includes(node.id);
+          },
         );
         const joinAge = node.joined_at == null ? Infinity : Math.max(0, now - node.joined_at);
         const joinEase = Math.min(1, joinAge / 0.72);
@@ -1686,7 +2204,28 @@
         ctx.fillStyle = color;
         ctx.shadowColor = color;
         ctx.shadowBlur = node.is_local ? 20 : 8;
-        if (node.kind === "role") {
+        if (node.kind === "task") {
+          ctx.beginPath();
+          for (let side = 0; side < 6; side += 1) {
+            const angle = -Math.PI / 2 + (side * Math.PI) / 3;
+            const x = node.x + Math.cos(angle) * radius;
+            const y = node.y + Math.sin(angle) * radius;
+            if (side === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, Math.max(2.2, radius * 0.32), 0, Math.PI * 2);
+          ctx.fillStyle = "#07141d";
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, radius + 3, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(255,255,255,0.72)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        } else if (node.kind === "role") {
           ctx.beginPath();
           ctx.moveTo(node.x, node.y - radius);
           ctx.lineTo(node.x + radius, node.y);
@@ -1713,9 +2252,19 @@
         const roleLabelHidden = node.kind === "role" && !selected && nodes.length > 18;
         if (!roleLabelHidden) {
           const fontScale = Math.max(scale, node.kind === "role" ? 0.78 : 0.68);
-          ctx.font = `${(node.kind === "role" ? 10 : 11.5) / fontScale}px Inter, "Microsoft YaHei", sans-serif`;
+          ctx.font = `${(node.kind === "role" ? 10 : node.kind === "task" ? 11 : 11.5) / fontScale}px Inter, "Microsoft YaHei", sans-serif`;
           const label = node.label.length > 30 ? `${node.label.slice(0, 29)}…` : node.label;
           ctx.fillText(label, node.x, node.y + radius + 7);
+        }
+        if (node.kind === "task" && selected) {
+          const fontScale = Math.max(scale, 0.72);
+          ctx.font = `${9.5 / fontScale}px Inter, "Microsoft YaHei", sans-serif`;
+          ctx.fillStyle = "rgba(174, 225, 245, 0.94)";
+          ctx.fillText(
+            `${node.participant_ids.length} ${t("hosts")} · ${node.assignments.length} ${t("subtasks")}`,
+            node.x,
+            node.y + radius + 7 + 17 / fontScale,
+          );
         }
         if (node.kind === "host" && selected && node.hardware) {
           const fontScale = Math.max(scale, 0.72);

@@ -86,3 +86,12 @@ and two cross-domain redundancy peers. Purple diamond nodes represent the Agent
 hosted on each machine. This is a visual rehearsal, not evidence of 50 physical
 nodes or pledged capacity.
 
+After the fleet is assembled, a cyan task hub appears. The demo cycles through
+five objectives such as long-context research, multimodal understanding,
+continual learning, edge response and memory repair. Each objective is decomposed
+into capability-specific stages, and the scheduler selects 7–9 distinct hosts
+instead of relying on a single pair. Select the task hub to inspect the objective,
+lead host, aggregate participant capacity and every host-to-subtask assignment.
+Animated multi-target lines show each stage fanning out to every participating
+worker.
+
