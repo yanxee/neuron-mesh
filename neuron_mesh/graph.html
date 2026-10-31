@@ -209,6 +209,13 @@
       border-radius: 0;
       background: repeating-linear-gradient(90deg, var(--amber) 0 4px, transparent 4px 7px);
     }
+    .swatch.request {
+      width: 18px;
+      height: 2px;
+      border-radius: 0;
+      background: #8ff4cb;
+      box-shadow: 0 0 8px rgba(143, 244, 203, 0.5);
+    }
 
     aside {
       min-height: 0;
@@ -278,6 +285,11 @@
       background: rgba(105, 228, 255, 0.055);
     }
     .detail-task-step + .detail-task-step { margin-top: 0.42rem; }
+    .detail-task-step.active {
+      border-color: rgba(105, 228, 255, 0.68);
+      box-shadow: 0 0 16px rgba(105, 228, 255, 0.1);
+    }
+    .detail-task-step.done { opacity: 0.5; }
     .detail-task-step strong { display: block; font-size: 0.74rem; }
     .detail-task-step span {
       display: block;
@@ -401,12 +413,13 @@
           <div class="metric"><strong id="roleMetric">0</strong><span data-i18n="roles">Roles</span></div>
           <div class="metric"><strong id="edgeMetric">0</strong><span data-i18n="liveEdges">Live edges</span></div>
           <div class="metric"><strong id="computeMetric">—</strong><span data-i18n="fleetCompute">Fleet compute</span></div>
+          <div class="metric"><strong id="activeTaskMetric">0</strong><span data-i18n="activeTasks">Active requests</span></div>
           <div class="metric"><strong id="eventMetric">0</strong><span data-i18n="events">Events</span></div>
         </div>
         <div class="demo-progress" id="demoProgress" hidden aria-live="polite">
           <div class="demo-progress-row">
             <span id="demoProgressLabel" data-i18n="joiningHosts">Joining virtual hosts</span>
-            <strong id="demoProgressCount">0 / 50</strong>
+            <strong id="demoProgressCount">0 / 256</strong>
           </div>
           <div class="demo-progress-track">
             <div class="demo-progress-fill" id="demoProgressFill"></div>
@@ -418,6 +431,7 @@
           <span class="legend-item"><i class="swatch orange"></i><span data-i18n="weakHost">Weak host</span></span>
           <span class="legend-item"><i class="swatch purple"></i><span data-i18n="role">Virtual role</span></span>
           <span class="legend-item"><i class="swatch cyan"></i><span data-i18n="taskHub">Task hub</span></span>
+          <span class="legend-item"><i class="swatch request"></i><span data-i18n="requestEdge">Ingress request</span></span>
           <span class="legend-item"><i class="swatch backup"></i><span data-i18n="redundancyEdge">Redundant backup</span></span>
           <span class="legend-item"><i class="swatch amber"></i><span data-i18n="activityLine">Activity pulse</span></span>
         </div>
@@ -474,6 +488,8 @@
           weakHost: "Weak host",
           role: "Virtual role",
           taskHub: "Task hub",
+          requestEdge: "Ingress request",
+          activeTasks: "Active requests",
           redundancyEdge: "Redundant backup",
           activityLine: "Activity pulse",
           joiningHosts: "Joining virtual hosts",
@@ -516,14 +532,26 @@
           taskType: "Task orchestrator",
           objective: "Objective",
           taskStatus: "Task status",
+          coverageTarget: "Random host coverage",
+          parallelSlots: "Concurrent calls",
+          activeCalls: "Active calls",
           participants: "Participating hosts",
           computeBudget: "Participant capacity",
           coordinator: "Lead host",
           taskPlan: "Task decomposition",
+          requestedBy: "Requesting ingress",
+          requestedCompute: "Requested compute",
+          grantedCompute: "Granted compute",
+          allocations: "Concurrent allocations",
+          share: "Share",
           subtasks: "subtasks",
           activeTask: "Active task",
           subtask: "Assigned stage",
           contribution: "Contribution",
+          asyncSteps: "async steps",
+          pending: "waiting",
+          active: "communicating",
+          done: "completed",
           roleStatus: "Role status",
           roleHosts: "Hosted by",
           joinActivity: "Host joined",
@@ -532,6 +560,7 @@
           storageActivity: "Encrypted storage",
           backupActivity: "Redundant backup",
           roleActivity: "Role activity",
+          requestActivity: "Resource request",
           taskPulse: "Multi-host task",
           secondsAgo: "s ago",
         },
@@ -553,6 +582,8 @@
           weakHost: "弱神经元",
           role: "虚拟角色",
           taskHub: "任务中枢",
+          requestEdge: "入口申请",
+          activeTasks: "并发申请",
           redundancyEdge: "冗余备份",
           activityLine: "活动脉冲",
           joiningHosts: "虚拟主机加入中",
@@ -595,14 +626,26 @@
           taskType: "任务编排器",
           objective: "计算目标",
           taskStatus: "任务状态",
+          coverageTarget: "随机覆盖规模",
+          parallelSlots: "并发调用数",
+          activeCalls: "通信中",
           participants: "参与主机",
           computeBudget: "参与算力",
           coordinator: "主控主机",
           taskPlan: "任务拆解",
+          requestedBy: "请求入口主机",
+          requestedCompute: "申请算力",
+          grantedCompute: "获批算力",
+          allocations: "并发任务分配",
+          share: "资源份额",
           subtasks: "个子任务",
           activeTask: "当前任务",
           subtask: "负责阶段",
           contribution: "资源贡献",
+          asyncSteps: "个异步步骤",
+          pending: "等待",
+          active: "通信中",
+          done: "已完成",
           roleStatus: "角色状态",
           roleHosts: "承载主机",
           joinActivity: "主机加入",
@@ -611,6 +654,7 @@
           storageActivity: "加密存储",
           backupActivity: "冗余备份",
           roleActivity: "角色活动",
+          requestActivity: "算力资源申请",
           taskPulse: "多主机协同任务",
           secondsAgo: "秒前",
         }
@@ -632,11 +676,14 @@
         storage: "#ffc56e",
         backup: "#ffc56e",
         role: "#c796ff",
+        request: "#8ff4cb",
         task: "#69e4ff",
       };
       const params = new URLSearchParams(window.location.search);
-      const demoMode = ["fleet50", "50"].includes((params.get("demo") || "").toLowerCase());
-      const DEMO_HOST_COUNT = 50;
+      const demoMode = ["fleet256", "256", "fleet50", "50"].includes(
+        (params.get("demo") || "").toLowerCase(),
+      );
+      const DEMO_HOST_COUNT = 256;
 
       let language = (navigator.language || "en").toLowerCase().startsWith("zh") ? "zh" : "en";
       let token = "";
@@ -662,9 +709,13 @@
       let demoPulseIndex = 0;
       let demoGeneration = 0;
       let simulationPaused = false;
-      let activeTaskNodeId = null;
-      let activeTaskIndex = 0;
-      let activeTaskStageIndex = 0;
+      let nextTaskSequence = 0;
+      let nextTaskTemplate = 0;
+      let taskPhaseStarted = false;
+      let nodeLookup = new Map();
+      let coverageDeck = [];
+      let coverageCursor = 0;
+      let coverageRandomState = 0x9e3779b9;
 
       const canvas = document.getElementById("graphCanvas");
       const ctx = canvas.getContext("2d");
@@ -680,6 +731,7 @@
       const replayButton = document.getElementById("replayButton");
       const fitButton = document.getElementById("fitButton");
       const tokenButton = document.getElementById("tokenButton");
+      const activeTaskMetric = document.getElementById("activeTaskMetric");
 
       function t(key) {
         return copy[language][key] || copy.en[key] || key;
@@ -730,22 +782,34 @@
       }
 
       function radiusForNode(node) {
-        if (node.kind === "role") return node.is_local ? 5.5 : 5;
-        if (node.kind === "task") return 15;
-        if (node.is_local) return 16;
-        if (node.capacity_tier === "strong") return 11.5;
-        if (node.capacity_tier === "balanced") return 9.5;
-        return 7.5;
+        if (node.kind === "role") return demoMode ? 4 : node.is_local ? 5.5 : 5;
+        if (node.kind === "task") return demoMode ? 12 : 15;
+        if (node.is_local) return demoMode ? 12 : 16;
+        if (node.capacity_tier === "strong") return demoMode ? 8 : 11.5;
+        if (node.capacity_tier === "balanced") return demoMode ? 6.5 : 9.5;
+        return demoMode ? 5.5 : 7.5;
       }
 
       function buildFleetPlan() {
         const regions = [
           ["APAC-SG", "Singapore / 新加坡", "fd-apac-a"],
           ["APAC-TK", "Tokyo / 东京", "fd-apac-b"],
+          ["APAC-SY", "Sydney / 悉尼", "fd-apac-c"],
+          ["APAC-MB", "Mumbai / 孟买", "fd-apac-d"],
           ["EMEA-LD", "London / 伦敦", "fd-emea-a"],
+          ["EMEA-FR", "Frankfurt / 法兰克福", "fd-emea-b"],
+          ["EMEA-ST", "Stockholm / 斯德哥尔摩", "fd-emea-c"],
+          ["EMEA-DB", "Dubai / 迪拜", "fd-emea-d"],
           ["AMER-VA", "Virginia / 弗吉尼亚", "fd-amer-a"],
+          ["AMER-OR", "Oregon / 俄勒冈", "fd-amer-b"],
+          ["AMER-SP", "São Paulo / 圣保罗", "fd-amer-c"],
+          ["AMER-CA", "Toronto / 多伦多", "fd-amer-d"],
           ["EDGE-GL", "Edge network / 全球边缘", "fd-edge-global"],
+          ["EDGE-AR", "Arctic edge / 北极边缘", "fd-edge-arctic"],
+          ["EDGE-OC", "Ocean edge / 海洋边缘", "fd-edge-ocean"],
+          ["EDGE-OR", "Orbital edge / 轨道边缘", "fd-edge-orbital"],
         ];
+        const hostsPerRegion = DEMO_HOST_COUNT / regions.length;
         const roots = [
           "atlas", "aurora", "boreal", "cedar", "delta",
           "ember", "fjord", "helios", "iris", "juniper",
@@ -857,6 +921,7 @@
           vision: { en: "Vision", zh: "视觉" },
           "model-shard": { en: "Model shard", zh: "模型分片" },
           cache: { en: "Memory cache", zh: "记忆缓存" },
+          ingress: { en: "Ingress", zh: "请求入口" },
           sensor: { en: "Sensor", zh: "传感器" },
           voice: { en: "Voice", zh: "语音" },
           redaction: { en: "Privacy redaction", zh: "隐私脱敏" },
@@ -875,6 +940,7 @@
               en: "Answer a cross-document question from distributed memory, visual evidence and sharded model workers.",
               zh: "利用分布式记忆、视觉证据和模型分片，回答跨文档研究问题。",
             },
+            requested_tflops: 1800,
             stages: [
               {
                 name: { en: "Plan and parallel reasoning", zh: "规划与并行推理" },
@@ -918,6 +984,7 @@
               en: "Fuse edge sensor streams, vision, private context and distributed inference into a verified scene graph.",
               zh: "融合边缘传感器、视觉、隐私语境和分布式推理，生成经过校验的场景图。",
             },
+            requested_tflops: 1250,
             stages: [
               {
                 name: { en: "Capture edge events", zh: "采集边缘事件" },
@@ -961,6 +1028,7 @@
               en: "Train, validate and durably checkpoint a local adapter without creating a single centralized training domain.",
               zh: "在避免单一中心训练域的前提下，完成本地适配器训练、验证和持久检查点。",
             },
+            requested_tflops: 2600,
             stages: [
               {
                 name: { en: "Train adapter shards", zh: "训练适配器分片" },
@@ -1004,6 +1072,7 @@
               en: "Respond to disconnected edge conditions using nearby sensors, relays and fallback inference providers.",
               zh: "利用邻近传感器、中继和回退推理节点，应对边缘断网场景。",
             },
+            requested_tflops: 720,
             stages: [
               {
                 name: { en: "Observe local conditions", zh: "观察本地状态" },
@@ -1047,6 +1116,7 @@
               en: "Rebuild missing ciphertext replicas and verify durable recall across independent failure domains.",
               zh: "在独立故障域之间重建缺失的密文副本，并验证持久召回。",
             },
+            requested_tflops: 1650,
             stages: [
               {
                 name: { en: "Locate memory fragments", zh: "定位记忆碎片" },
@@ -1080,13 +1150,13 @@
         const roles = [];
         const edges = [];
         for (let i = 0; i < DEMO_HOST_COUNT; i += 1) {
-          const regionIndex = Math.floor(i / 10);
-          const regionalIndex = i % 10;
+          const regionIndex = Math.floor(i / hostsPerRegion);
+          const regionalIndex = i % hostsPerRegion;
           const [regionCode, regionLabel, failureDomain] = regions[regionIndex];
-          const deviceClass = deviceCycle[regionalIndex];
+          const deviceClass = deviceCycle[regionalIndex % deviceCycle.length];
           const profile = deviceProfiles[deviceClass];
           const variant = i % profile.cpuCores.length;
-          const label = `${roots[i]}-${profile.code}-${String(i + 1).padStart(2, "0")}`;
+          const label = `${roots[i % roots.length]}-${profile.code}-${String(i + 1).padStart(3, "0")}`;
           const hostId = `node:demo-${i + 1}`;
           const roleId = `role:demo-agent-${i + 1}`;
           const [agentSlug, agentLabel, agentModel, agentTask] = agents[i % agents.length];
@@ -1099,9 +1169,11 @@
             task: agentTask,
             status: "active",
           };
+          const hostCapabilities = [...new Set([...profile.capabilities, "ingress"])];
           const host = {
             id: hostId,
             node_id: `demo-${i + 1}`,
+            host_index: i,
             kind: "host",
             label,
             is_local: i === 0,
@@ -1112,8 +1184,8 @@
             failure_domain: failureDomain,
             region: regionLabel,
             region_code: regionCode,
-            service_roles: profile.capabilities,
-            capabilities: profile.capabilities,
+            service_roles: hostCapabilities,
+            capabilities: hostCapabilities,
             hardware: {
               cpu_cores: profile.cpuCores[variant],
               memory_gb: profile.memoryGb[variant],
@@ -1149,10 +1221,12 @@
 
         const backupMap = new Map();
         for (let i = 0; i < hosts.length; i += 1) {
-          const domainIndex = Math.floor(i / 10);
-          for (const domainOffset of [1, 2]) {
+          const domainIndex = Math.floor(i / hostsPerRegion);
+          for (const domainOffset of [1, 5]) {
             const peerDomain = (domainIndex + domainOffset) % regions.length;
-            const peerIndex = peerDomain * 10 + ((i * 7 + domainOffset * 3) % 10);
+            const peerIndex =
+              peerDomain * hostsPerRegion +
+              ((i * 7 + domainOffset * 3) % hostsPerRegion);
             const peer = hosts[peerIndex];
             hosts[i].redundancy_peer_ids.push(peer.id);
             const pair = [hosts[i].id, peer.id].sort();
@@ -1167,8 +1241,8 @@
         }
         edges.push(...backupMap.values());
 
-        for (let start = 0; start < hosts.length; start += 10) {
-          for (let offset = 0; offset < 9; offset += 1) {
+        for (let start = 0; start < hosts.length; start += hostsPerRegion) {
+          for (let offset = 0; offset < hostsPerRegion - 1; offset += 1) {
             edges.push({
               id: `peer:${hosts[start + offset].id}:${hosts[start + offset + 1].id}`,
               source: hosts[start + offset].id,
@@ -1212,7 +1286,33 @@
         return value == null ? "" : String(value);
       }
 
-      function addDemoActivity(source, target, kind, detail = "") {
+      function demoRandom() {
+        coverageRandomState =
+          (Math.imul(coverageRandomState, 1664525) + 1013904223) >>> 0;
+        return coverageRandomState / 4294967296;
+      }
+
+      function refillCoverageDeck() {
+        coverageDeck = Array.from({ length: 40 }, (_, index) => index + 1);
+        for (let index = coverageDeck.length - 1; index > 0; index -= 1) {
+          const swapIndex = Math.floor(demoRandom() * (index + 1));
+          [coverageDeck[index], coverageDeck[swapIndex]] =
+            [coverageDeck[swapIndex], coverageDeck[index]];
+        }
+        coverageCursor = 0;
+      }
+
+      function nextCoverageTarget() {
+        if (coverageCursor >= coverageDeck.length) refillCoverageDeck();
+        return coverageDeck[coverageCursor++];
+      }
+
+      function nextParallelWidth(coverage) {
+        if (coverage <= 1) return 1;
+        return 1 + Math.floor(demoRandom() * Math.min(20, coverage));
+      }
+
+      function addDemoActivity(source, target, kind, detail = "", options = {}) {
         const now = Date.now() / 1000 + clockOffset;
         const targets = (Array.isArray(target) ? target : [target]).filter(Boolean);
         if (!targets.length) return;
@@ -1223,6 +1323,7 @@
           targets,
           kind,
           detail,
+          duration: options.duration,
           occurred_at: now,
         });
         demoPulseIndex += 1;
@@ -1235,6 +1336,11 @@
       function updateDashboardMetrics(summary = null) {
         const hostNodes = nodes.filter((node) => node.kind === "host");
         const roleNodes = nodes.filter((node) => node.kind === "role");
+        const taskNodes = nodes.filter(
+          (node) =>
+            node.kind === "task" &&
+            (node.status === "pending" || node.status === "running"),
+        );
         const now = Date.now() / 1000 + clockOffset;
         const recent = activities.filter((event) => now - event.occurred_at < 30).length;
         const totalCompute = hostNodes.reduce(
@@ -1257,6 +1363,7 @@
         document.getElementById("roleMetric").textContent = String(counts.roles || 0);
         document.getElementById("edgeMetric").textContent = String(counts.live_edges || 0);
         document.getElementById("eventMetric").textContent = String(counts.recent_activity || 0);
+        activeTaskMetric.textContent = String(taskNodes.length);
         document.getElementById("computeMetric").textContent = totalCompute
           ? `${formatNumber(totalCompute)} TF`
           : "—";
@@ -1290,73 +1397,199 @@
         panY = height / 2 - ((bounds.minY + bounds.maxY) / 2) * scale;
       }
 
-      function pickTaskAssignments(task, cycle) {
-        const availableHosts = nodes.filter(
-          (node) => node.kind === "host" && node.online !== false,
+      function activeDemoTasks() {
+        return nodes
+          .filter(
+            (node) =>
+              node.kind === "task" &&
+              (node.status === "pending" || node.status === "running"),
+          )
+          .sort((a, b) => a.started_at - b.started_at);
+      }
+
+      function demoAssignmentsForHost(hostId) {
+        return activeDemoTasks().flatMap((task) =>
+          task.assignments
+            .filter((assignment) => assignment.host_id === hostId)
+            .map((assignment) => ({ task, assignment })),
         );
+      }
+
+      function rebalanceTaskAllocations() {
+        const tasks = activeDemoTasks();
+        const hostTaskCounts = new Map();
+        tasks.forEach((task) => {
+          new Set(task.assignments.map((item) => item.host_id)).forEach((hostId) => {
+            hostTaskCounts.set(hostId, (hostTaskCounts.get(hostId) || 0) + 1);
+          });
+        });
+        tasks.forEach((task) => {
+          let rawGranted = 0;
+          task.assignments.forEach((assignment) => {
+            const host = demoPlan?.hostsById.get(assignment.host_id);
+            const count = Math.max(1, hostTaskCounts.get(assignment.host_id) || 1);
+            assignment.base_share_percent = 100 / count;
+            assignment.allocated_tflops =
+              Number(host?.compute_tflops || 0) * (assignment.base_share_percent / 100);
+            rawGranted += assignment.allocated_tflops;
+          });
+          const requestScale = rawGranted
+            ? Math.min(1, task.requested_tflops / rawGranted)
+            : 1;
+          let granted = 0;
+          task.assignments.forEach((assignment) => {
+            const host = demoPlan?.hostsById.get(assignment.host_id);
+            const allocationRatio = assignment.base_share_percent * requestScale;
+            assignment.share_percent = Math.max(1, Math.round(allocationRatio));
+            assignment.allocated_tflops =
+              Number(host?.compute_tflops || 0) * (allocationRatio / 100);
+            granted += assignment.allocated_tflops;
+          });
+          task.compute_tflops = granted;
+        });
+      }
+
+      function pickTaskAssignments(task, cycle, requesterId, coverage) {
+        const availableHosts = nodes.filter(
+          (node) =>
+            node.kind === "host" &&
+            node.online !== false &&
+            node.id !== requesterId,
+        );
+        const activeLoads = new Map();
+        activeDemoTasks().forEach((activeTask) => {
+          new Set(activeTask.assignments.map((item) => item.host_id)).forEach((hostId) => {
+            activeLoads.set(hostId, (activeLoads.get(hostId) || 0) + 1);
+          });
+        });
         const usedHosts = new Set();
         const domainsInUse = new Map();
         const assignments = [];
-        for (let stageIndex = 0; stageIndex < task.stages.length; stageIndex += 1) {
-          const stage = task.stages[stageIndex];
-          for (let slot = 0; slot < stage.slots; slot += 1) {
-            const candidates = availableHosts
-              .filter(
-                (host) =>
-                  !usedHosts.has(host.id) &&
-                  host.capabilities?.includes(stage.capability),
-              )
-              .map((host) => {
-                const domainCount = domainsInUse.get(host.failure_domain) || 0;
-                const jitter = (Number(host.node_id.split("-").pop()) * 17 +
-                  cycle * 11 + stageIndex * 7) % 29;
-                return {
-                  host,
-                  score:
-                    Number(host.compute_tflops || 0) * 0.7 -
-                    Number(host.rtt_ms || 100) * 1.1 +
-                    jitter +
-                    (domainCount === 0 ? 420 : -domainCount * 90),
-                };
-              })
-              .sort((a, b) => b.score - a.score);
-            const selected = candidates[0]?.host;
-            if (!selected) continue;
-            usedHosts.add(selected.id);
-            domainsInUse.set(
-              selected.failure_domain,
-              (domainsInUse.get(selected.failure_domain) || 0) + 1,
+        let sharedSlotUsed = false;
+        const selectHost = (requiredCapabilities, assignmentIndex, stageIndex) => {
+          const candidates = availableHosts
+            .filter((host) => !usedHosts.has(host.id))
+            .map((host) => {
+              const matches = requiredCapabilities.filter((capability) =>
+                host.capabilities?.includes(capability),
+              ).length;
+              const domainCount = domainsInUse.get(host.failure_domain) || 0;
+              const load = activeLoads.get(host.id) || 0;
+              const jitter = (Number(host.node_id.split("-").pop()) * 17 +
+                cycle * 11 + stageIndex * 7 + assignmentIndex * 5) % 31;
+              return {
+                host,
+                load,
+                matches,
+                score:
+                  matches * 520 +
+                  Number(host.compute_tflops || 0) * 0.7 -
+                  Number(host.rtt_ms || 100) * 1.1 -
+                  load * 75 +
+                  jitter +
+                  (domainCount === 0 ? 420 : -domainCount * 90),
+              };
+            })
+            .sort((a, b) =>
+              !sharedSlotUsed &&
+              a.matches > 0 &&
+              b.matches > 0 &&
+              b.load !== a.load
+                ? b.load - a.load
+                : b.score - a.score,
             );
-            assignments.push({
-              stage_index: stageIndex,
-              slot_index: slot,
-              stage_name: stage.name,
-              capability: stage.capability,
-              host_id: selected.id,
-              contribution: stage.contribution,
-            });
+          const selected = candidates[0]?.host;
+          if (!selected) return null;
+          if ((activeLoads.get(selected.id) || 0) > 0) sharedSlotUsed = true;
+          usedHosts.add(selected.id);
+          domainsInUse.set(
+            selected.failure_domain,
+            (domainsInUse.get(selected.failure_domain) || 0) + 1,
+          );
+          return selected;
+        };
+
+        for (let assignmentIndex = 0; assignmentIndex < coverage; assignmentIndex += 1) {
+          const bundlesStages = coverage < task.stages.length;
+          let stageIndex;
+          let slotIndex;
+          let stageName;
+          let contribution;
+          let requiredCapabilities;
+          if (bundlesStages) {
+            const start = Math.floor((assignmentIndex * task.stages.length) / coverage);
+            const end = Math.max(
+              start + 1,
+              Math.floor(((assignmentIndex + 1) * task.stages.length) / coverage),
+            );
+            const bundledStages = task.stages.slice(start, end);
+            stageIndex = start;
+            slotIndex = 0;
+            requiredCapabilities = [...new Set(
+              bundledStages.map((stage) => stage.capability),
+            )];
+            stageName = {
+              en: bundledStages.map((stage) => stage.name.en).join(" → "),
+              zh: bundledStages.map((stage) => stage.name.zh).join(" → "),
+            };
+            contribution = {
+              en: bundledStages.map((stage) => stage.contribution.en).join(" + "),
+              zh: bundledStages.map((stage) => stage.contribution.zh).join(" + "),
+            };
+          } else {
+            stageIndex = assignmentIndex % task.stages.length;
+            slotIndex = Math.floor(assignmentIndex / task.stages.length);
+            const stage = task.stages[stageIndex];
+            requiredCapabilities = [stage.capability];
+            stageName = slotIndex === 0
+              ? stage.name
+              : {
+                  en: `${stage.name.en} · shard ${slotIndex + 1}`,
+                  zh: `${stage.name.zh} · 分片 ${slotIndex + 1}`,
+                };
+            contribution = stage.contribution;
           }
+          const selected = selectHost(requiredCapabilities, assignmentIndex, stageIndex);
+          if (!selected) continue;
+          assignments.push({
+            stage_index: stageIndex,
+            slot_index: slotIndex,
+            stage_name: stageName,
+            capability: requiredCapabilities[0],
+            capabilities: requiredCapabilities,
+            host_id: selected.id,
+            contribution,
+            share_percent: 100,
+            allocated_tflops: 0,
+            status: "pending",
+          });
         }
         return assignments;
       }
 
-      function chooseTaskPosition(hostNodes) {
+      function chooseTaskPosition() {
         const width = canvas.clientWidth || 800;
         const height = canvas.clientHeight || 600;
         const candidates = [
-          [0.2, 0.25],
+          [0.18, 0.22],
           [0.5, 0.17],
-          [0.8, 0.25],
-          [0.2, 0.68],
-          [0.8, 0.68],
+          [0.82, 0.22],
+          [0.18, 0.55],
+          [0.5, 0.52],
+          [0.82, 0.55],
+          [0.2, 0.82],
           [0.5, 0.82],
+          [0.82, 0.82],
         ];
+        const anchors = nodes.filter(
+          (node) => node.kind === "host" || node.kind === "task",
+        );
         let best = candidates[0];
         let bestClearance = -Infinity;
         for (const candidate of candidates) {
           const screenX = width * candidate[0];
           const screenY = height * candidate[1];
-          const clearance = hostNodes.reduce((minimum, node) => {
+          const clearance = anchors.reduce((minimum, node) => {
             const nodeScreenX = node.x * scale + panX;
             const nodeScreenY = node.y * scale + panY;
             return Math.min(
@@ -1375,31 +1608,62 @@
         };
       }
 
-      function activateDemoTask(index) {
-        if (!demoMode || !demoPlan) return;
-        const taskTemplates = demoPlan.taskTemplates;
-        const task = taskTemplates[index % taskTemplates.length];
-        const assignments = pickTaskAssignments(task, index);
-        const participants = [...new Set(assignments.map((item) => item.host_id))];
-        if (participants.length < 2) return;
-        const previousTaskId = activeTaskNodeId;
-        const selectionFollowsTask = !selectedId || selectedId === previousTaskId;
-        if (previousTaskId) {
-          nodes = nodes.filter((node) => node.id !== previousTaskId);
-          edges = edges.filter(
-            (edge) => edge.source !== previousTaskId && edge.target !== previousTaskId,
-          );
-          activities = activities.filter((event) => event.source !== previousTaskId);
+      function chooseRequesterHost() {
+        const activeRequesters = new Set(activeDemoTasks().map((task) => task.requester_id));
+        const hosts = nodes.filter((node) => node.kind === "host");
+        const eligible = hosts.filter((host) => !activeRequesters.has(host.id));
+        const pool = (eligible.length ? eligible : hosts)
+          .sort((a, b) =>
+            Number(b.hardware?.bandwidth_gbps || 0) -
+              Number(a.hardware?.bandwidth_gbps || 0) ||
+            Number(b.compute_tflops || 0) - Number(a.compute_tflops || 0),
+          )
+          .slice(0, 24);
+        return pool[nextTaskSequence % Math.max(1, pool.length)];
+      }
+
+      function removeDemoTask(taskId) {
+        const remaining = activeDemoTasks().filter((task) => task.id !== taskId);
+        nodes = nodes.filter((node) => node.id !== taskId);
+        edges = edges.filter(
+          (edge) => edge.source !== taskId && edge.target !== taskId,
+        );
+        activities = activities.filter(
+          (event) =>
+            event.source !== taskId &&
+            !(event.targets || [event.target]).includes(taskId),
+        );
+        if (selectedId === taskId) {
+          selectedId = remaining[0]?.id || null;
         }
+        rebalanceTaskAllocations();
+        updateDashboardMetrics();
+        renderDetails();
+        renderActivities();
+      }
+
+      function activateDemoTask(templateIndex = nextTaskTemplate) {
+        if (!demoMode || !demoPlan || activeDemoTasks().length >= 3) return null;
+        const taskTemplates = demoPlan.taskTemplates;
+        const task = taskTemplates[templateIndex % taskTemplates.length];
+        nextTaskTemplate = Math.max(nextTaskTemplate, templateIndex + 1);
+        const requester = chooseRequesterHost();
+        if (!requester) return null;
+        const targetCoverage = nextCoverageTarget();
+        const assignments = pickTaskAssignments(
+          task,
+          nextTaskSequence,
+          requester.id,
+          targetCoverage,
+        );
+        const participants = [...new Set(assignments.map((item) => item.host_id))];
+        if (participants.length < 1) return null;
+        const parallelWidth = nextParallelWidth(participants.length);
 
         const now = Date.now() / 1000 + clockOffset;
-        const taskId = `task:${demoGeneration}:${index}`;
-        const hostNodes = nodes.filter((node) => node.kind === "host");
-        const position = chooseTaskPosition(hostNodes);
-        const participantCapacity = participants.reduce(
-          (total, hostId) => total + Number(demoPlan.hostsById.get(hostId)?.compute_tflops || 0),
-          0,
-        );
+        const taskId = `task:${demoGeneration}:${nextTaskSequence}`;
+        nextTaskSequence += 1;
+        const position = chooseTaskPosition();
         const coordinator = participants
           .map((hostId) => demoPlan.hostsById.get(hostId))
           .sort((a, b) => Number(b?.compute_tflops || 0) - Number(a?.compute_tflops || 0))[0];
@@ -1411,11 +1675,20 @@
           objective: task.objective,
           label: `${task.code} · ${localizedText(task.title)}`,
           status: "running",
+          target_coverage: targetCoverage,
+          parallel_width: parallelWidth,
           assignments,
           participant_ids: participants,
-          compute_tflops: participantCapacity,
+          compute_tflops: 0,
+          requested_tflops: task.requested_tflops,
+          requester_id: requester.id,
           coordinator_id: coordinator?.id || participants[0],
+          stage_cursor: 0,
+          completed_assignments: 0,
+          active_assignment_indices: [],
+          service_start_at: now + 2.2,
           started_at: now,
+          expires_at: now + 300,
           joined_at: now,
           reveal_at: now,
           pinned_x: position.x,
@@ -1427,26 +1700,19 @@
           radius: radiusForNode({ kind: "task" }),
         };
         nodes.push(taskNode);
-        participants.forEach((hostId) => {
-          edges.push({
-            id: `task-edge:${taskId}:${hostId}`,
-            source: taskId,
-            target: hostId,
-            kind: "task",
-          });
-        });
-        activeTaskNodeId = taskId;
-        activeTaskIndex = index;
-        activeTaskStageIndex = 0;
-        if (selectionFollowsTask) {
+        rebalanceTaskAllocations();
+        if (!selectedId) {
           selectedId = taskId;
           renderDetails();
         }
-        addDemoActivity(taskId, participants, "task", {
-          en: `${assignments.length} subtasks dispatched to ${participants.length} hosts`,
-          zh: `已向 ${participants.length} 台主机派发 ${assignments.length} 个子任务`,
+        addDemoActivity(requester.id, taskId, "request", {
+          en: `Requested ${formatNumber(task.requested_tflops)} TF from ${participants.length} hosts`,
+          zh: `向 ${participants.length} 台主机申请 ${formatNumber(task.requested_tflops)} TF 算力`,
+        }, {
+          duration: 2,
         });
         updateDashboardMetrics();
+        return taskId;
       }
 
       function joinDemoHost(index, generation) {
@@ -1514,48 +1780,89 @@
             simulationPaused = true;
           }, 4800));
           demoTimers.push(window.setTimeout(() => {
+            taskPhaseStarted = true;
             activateDemoTask(0);
             fitGraph();
           }, 5600));
         }
       }
 
-      function demoPulse() {
-        if (!demoMode || demoJoined < DEMO_HOST_COUNT || !demoPlan) return;
-        const task = nodeById(activeTaskNodeId);
-        if (!task) return;
-        const now = Date.now() / 1000 + clockOffset;
-        if (now - task.started_at > 12) {
-          activateDemoTask(activeTaskIndex + 1);
-          return;
-        }
-        const stageGroups = [...new Set(task.assignments.map((item) => item.stage_index))]
-          .map((stageIndex) =>
-            task.assignments.filter((item) => item.stage_index === stageIndex),
-          );
-        if (!stageGroups.length) return;
-        activeTaskStageIndex = (activeTaskStageIndex + 1) % stageGroups.length;
-        let group = stageGroups[activeTaskStageIndex];
-        let targets = [...new Set(group.map((item) => item.host_id))];
-        if (targets.length < 2) {
-          const nextGroup = stageGroups[(activeTaskStageIndex + 1) % stageGroups.length];
-          targets = [...new Set([
-            ...targets,
-            ...nextGroup.map((item) => item.host_id),
-          ])];
-        }
-        if (demoPulseIndex % 5 === 0) {
-          addDemoActivity(task.id, task.participant_ids, "task", {
-            en: `Full plan active · ${task.compute_tflops.toFixed(0)} TF available`,
-            zh: `完整任务图执行中 · 可用算力 ${task.compute_tflops.toFixed(0)} TF`,
-          });
-          return;
-        }
-        const stageName = group[0]?.stage_name;
-        addDemoActivity(task.id, targets, "task", {
-          en: `${stageName?.en || stageName || "Task stage"} · ${targets.length} workers`,
-          zh: `${stageName?.zh || stageName || "任务阶段"} · ${targets.length} 台主机并行`,
+      function serviceDurationForAssignment(task, assignment) {
+        const host = demoPlan?.hostsById.get(assignment.host_id);
+        const allocated = Math.max(0.5, Number(assignment.allocated_tflops || 0));
+        const stageWeight = 0.88 + (assignment.stage_index % 5) * 0.065;
+        const jitter = 0.78 + demoRandom() * 0.66;
+        const duration = (0.55 + 5.4 / Math.sqrt(allocated + 1)) *
+          stageWeight *
+          jitter;
+        return Math.max(0.65, Math.min(4.8, duration));
+      }
+
+      function asyncDispatchTask(task, now) {
+        const stillActive = [];
+        (task.active_assignment_indices || []).forEach((assignmentIndex) => {
+          const assignment = task.assignments[assignmentIndex];
+          if (assignment?.status !== "active") return;
+          if (assignment.ends_at <= now) {
+            assignment.status = "done";
+            task.completed_assignments += 1;
+          } else {
+            stillActive.push(assignmentIndex);
+          }
         });
+        task.active_assignment_indices = stillActive;
+        if (now < task.service_start_at) return;
+
+        const pendingIndices = task.assignments
+          .map((assignment, index) => ({ assignment, index }))
+          .filter((item) => item.assignment.status === "pending")
+          .map((item) => item.index);
+        if (!pendingIndices.length && !stillActive.length) {
+          task.status = "complete";
+          task.expires_at = now + 2.2;
+          updateDashboardMetrics();
+          if (selectedId === task.id) renderDetails();
+          return;
+        }
+
+        const freeSlots = Math.max(0, task.parallel_width - stillActive.length);
+        const nextBatch = pendingIndices.slice(0, freeSlots);
+        nextBatch.forEach((assignmentIndex) => {
+          const assignment = task.assignments[assignmentIndex];
+          const duration = serviceDurationForAssignment(task, assignment);
+          assignment.status = "active";
+          assignment.started_at = now;
+          assignment.ends_at = now + duration;
+          assignment.service_seconds = duration;
+          task.active_assignment_indices.push(assignmentIndex);
+          addDemoActivity(task.id, [assignment.host_id], "task", {
+            en: `Async call ${assignmentIndex + 1}/${task.assignments.length} · ${assignment.stage_name.en} · service ${duration.toFixed(1)}s`,
+            zh: `异步调用 ${assignmentIndex + 1}/${task.assignments.length} · ${assignment.stage_name.zh} · 服务 ${duration.toFixed(1)} 秒`,
+          }, {
+            duration,
+          });
+        });
+        if (nextBatch.length && selectedId === task.id) renderDetails();
+      }
+
+      function demoPulse() {
+        if (!demoMode || demoJoined < DEMO_HOST_COUNT || !demoPlan || !taskPhaseStarted) {
+          return;
+        }
+        const now = Date.now() / 1000 + clockOffset;
+        nodes
+          .filter((node) => node.kind === "task")
+          .filter((task) => now >= task.expires_at)
+          .forEach((task) => removeDemoTask(task.id));
+        let tasks = activeDemoTasks();
+        if (tasks.length < 3) {
+          activateDemoTask(nextTaskTemplate);
+          tasks = activeDemoTasks();
+        }
+        if (!tasks.length) return;
+        tasks
+          .filter((task) => now >= task.service_start_at)
+          .forEach((task) => asyncDispatchTask(task, now));
       }
 
       function clearDemoRun() {
@@ -1584,9 +1891,12 @@
         demoJoined = 0;
         demoPulseIndex = 0;
         simulationPaused = false;
-        activeTaskNodeId = null;
-        activeTaskIndex = 0;
-        activeTaskStageIndex = 0;
+        nextTaskSequence = 0;
+        nextTaskTemplate = 0;
+        taskPhaseStarted = false;
+        coverageDeck = [];
+        coverageCursor = 0;
+        coverageRandomState = (Date.now() ^ Math.imul(demoGeneration, 2654435761)) >>> 0;
         demoPlan = buildFleetPlan();
         clockOffset = 0;
         scale = 1;
@@ -1603,15 +1913,15 @@
         setStatus("live", t("syntheticMode"));
         const generation = demoGeneration;
         demoTimers.push(
-          window.setTimeout(() => joinDemoHost(0, generation), 420),
+          window.setTimeout(() => joinDemoHost(0, generation), 320),
         );
         for (let index = 1; index < DEMO_HOST_COUNT; index += 1) {
-          const delay = 600 + index * 165 + (index % 4) * 24;
+          const delay = 390 + index * 48 + (index % 6) * 6;
           demoTimers.push(
             window.setTimeout(() => joinDemoHost(index, generation), delay),
           );
         }
-        demoTicker = window.setInterval(demoPulse, 1150);
+        demoTicker = window.setInterval(demoPulse, 320);
       }
 
       function ensurePositions(nextNodes) {
@@ -1623,12 +1933,20 @@
           const previous = existing.get(node.id);
           const angle = (index / Math.max(nextNodes.length, 1)) * Math.PI * 2;
           const radius = node.kind === "role" ? 220 : 280;
+          const x = previous?.x ?? width / 2 + Math.cos(angle) * radius;
+          const y = previous?.y ?? height / 2 + Math.sin(angle) * radius;
           return {
             ...node,
-            x: previous?.x ?? width / 2 + Math.cos(angle) * radius,
-            y: previous?.y ?? height / 2 + Math.sin(angle) * radius,
+            x,
+            y,
             vx: previous?.vx ?? 0,
             vy: previous?.vy ?? 0,
+            pinned_x: node.kind === "task"
+              ? previous?.pinned_x ?? x
+              : node.pinned_x,
+            pinned_y: node.kind === "task"
+              ? previous?.pinned_y ?? y
+              : node.pinned_y,
             radius: radiusForNode({ ...node, is_local: node.id === local?.id }),
           };
         });
@@ -1690,7 +2008,7 @@
       });
 
       function nodeById(id) {
-        return nodes.find((node) => node.id === id);
+        return nodeLookup.get(id) || nodes.find((node) => node.id === id);
       }
 
       function graphPoint(event) {
@@ -1828,8 +2146,13 @@
         } else if (node.kind === "task") {
           rows.push([t("objective"), localizedText(node.objective)]);
           rows.push([t("taskStatus"), node.status]);
+          rows.push([t("requestedBy"), labelForNodeId(node.requester_id)]);
+          rows.push([t("coverageTarget"), `${node.target_coverage} ${t("hosts")}`]);
+          rows.push([t("parallelSlots"), String(node.parallel_width || 1)]);
+          rows.push([t("activeCalls"), String(node.active_assignment_indices?.length || 0)]);
           rows.push([t("participants"), String(node.participant_ids?.length || 0)]);
-          rows.push([t("computeBudget"), `${formatNumber(node.compute_tflops)} TFLOPS`]);
+          rows.push([t("requestedCompute"), `${formatNumber(node.requested_tflops)} TFLOPS`]);
+          rows.push([t("grantedCompute"), `${formatNumber(node.compute_tflops)} TFLOPS`]);
           rows.push([t("coordinator"), labelForNodeId(node.coordinator_id)]);
           rows.push([t("subtasks"), String(node.assignments?.length || 0)]);
         } else {
@@ -1851,14 +2174,9 @@
           if (node.redundancy_peer_ids?.length) {
             rows.push([t("redundancy"), String(node.redundancy_peer_ids.length)]);
           }
-          const activeTask = activeTaskNodeId ? nodeById(activeTaskNodeId) : null;
-          const assignment = activeTask?.assignments?.find(
-            (item) => item.host_id === node.id,
-          );
-          if (assignment) {
-            rows.push([t("activeTask"), localizedText(activeTask.title)]);
-            rows.push([t("subtask"), localizedText(assignment.stage_name)]);
-            rows.push([t("contribution"), localizedText(assignment.contribution)]);
+          const hostAssignments = demoAssignmentsForHost(node.id);
+          if (hostAssignments.length) {
+            rows.push([t("activeTasks"), String(hostAssignments.length)]);
           }
         }
         for (const [label, value] of rows) {
@@ -1874,7 +2192,7 @@
           const section = appendDetailGroup(container, t("taskPlan"));
           node.assignments.forEach((assignment) => {
             const step = document.createElement("div");
-            step.className = "detail-task-step";
+            step.className = `detail-task-step ${assignment.status || "pending"}`;
             const stage = document.createElement("strong");
             const slotTotal = node.assignments.filter(
               (item) => item.stage_index === assignment.stage_index,
@@ -1882,7 +2200,13 @@
             const slotLabel = slotTotal > 1 ? ` ${assignment.slot_index + 1}/${slotTotal}` : "";
             stage.textContent = `${localizedText(assignment.stage_name)}${slotLabel}`;
             const detail = document.createElement("span");
-            detail.textContent = `${labelForNodeId(assignment.host_id)} · ${localizedText(assignment.contribution)} · ${capabilityLabel(assignment.capability)}`;
+            const taskCapabilities = (assignment.capabilities || [assignment.capability])
+              .map(capabilityLabel)
+              .join(" + ");
+            const serviceTime = assignment.service_seconds
+              ? ` · ${assignment.service_seconds.toFixed(1)}s`
+              : "";
+            detail.textContent = `${t(assignment.status || "pending")} · ${labelForNodeId(assignment.host_id)} · ${localizedText(assignment.contribution)} · ${taskCapabilities} · ${assignment.share_percent}% · ${formatNumber(assignment.allocated_tflops)} TF${serviceTime}`;
             step.append(stage, detail);
             section.append(step);
           });
@@ -1899,6 +2223,41 @@
             tags.append(tag);
           });
           section.append(tags);
+        }
+
+        if (node.kind === "host") {
+          const hostAssignments = demoAssignmentsForHost(node.id);
+          const requestedTasks = activeDemoTasks().filter(
+            (task) => task.requester_id === node.id,
+          );
+          if (hostAssignments.length || requestedTasks.length) {
+            const section = appendDetailGroup(container, t("allocations"));
+            hostAssignments.forEach(({ task, assignment }) => {
+              const card = document.createElement("div");
+              card.className = "detail-task-step";
+              const heading = document.createElement("strong");
+              heading.textContent = `${task.code} · ${localizedText(task.title)}`;
+              const detail = document.createElement("span");
+              const serviceTime = assignment.service_seconds
+                ? ` · ${assignment.service_seconds.toFixed(1)}s`
+                : "";
+              detail.textContent = `${t(assignment.status || "pending")} · ${localizedText(assignment.stage_name)} · ${localizedText(assignment.contribution)} · ${assignment.share_percent}% · ${formatNumber(assignment.allocated_tflops)} TF${serviceTime}`;
+              card.append(heading, detail);
+              section.append(card);
+            });
+            requestedTasks.forEach((task) => {
+              const card = document.createElement("div");
+              card.className = "detail-task-step";
+              const heading = document.createElement("strong");
+              heading.textContent = `${t("requestedBy")}: ${task.code} · ${localizedText(task.title)}`;
+              const detail = document.createElement("span");
+              detail.textContent = language === "zh"
+                ? `申请 ${formatNumber(task.requested_tflops)} TF · 获批 ${formatNumber(task.compute_tflops)} TF`
+                : `${formatNumber(task.requested_tflops)} TF requested · ${formatNumber(task.compute_tflops)} TF granted`;
+              card.append(heading, detail);
+              section.append(card);
+            });
+          }
         }
 
         if (node.kind === "host" && node.redundancy_peer_ids?.length) {
@@ -1939,6 +2298,7 @@
           storage: t("storageActivity"),
           backup: t("backupActivity"),
           role: t("roleActivity"),
+          request: t("requestActivity"),
           task: t("taskPulse"),
         }[kind] || kind;
       }
@@ -1986,20 +2346,18 @@
         const centerX = (canvas.clientWidth || 800) / 2;
         const centerY = (canvas.clientHeight || 600) / 2;
         const dense = nodes.length > 45;
-        const repulsion = dense ? 2850 : 6200;
+        const veryDense = nodes.length > 220;
+        const repulsion = veryDense ? 900 : dense ? 2850 : 6200;
+        const forceNodes = nodes.filter((node) => node.kind !== "role");
         for (const node of nodes) {
-          node.fx = (centerX - node.x) * (dense ? 0.00024 : 0.00018);
-          node.fy = (centerY - node.y) * (dense ? 0.00024 : 0.00018);
+          node.fx = (centerX - node.x) * (veryDense ? 0.00038 : dense ? 0.00024 : 0.00018);
+          node.fy = (centerY - node.y) * (veryDense ? 0.00038 : dense ? 0.00024 : 0.00018);
         }
-        for (let i = 0; i < nodes.length; i += 1) {
-          for (let j = i + 1; j < nodes.length; j += 1) {
-            const a = nodes[i];
-            const b = nodes[j];
+        for (let i = 0; i < forceNodes.length; i += 1) {
+          for (let j = i + 1; j < forceNodes.length; j += 1) {
+            const a = forceNodes[i];
+            const b = forceNodes[j];
             if (a.kind === "task" || b.kind === "task") continue;
-            const hostedPair =
-              (a.kind === "role" && a.hosts?.includes(b.id)) ||
-              (b.kind === "role" && b.hosts?.includes(a.id));
-            if (hostedPair) continue;
             const dx = b.x - a.x || 0.01;
             const dy = b.y - a.y || 0.01;
             const distance2 = Math.max(dx * dx + dy * dy, 100);
@@ -2014,7 +2372,9 @@
           }
         }
         for (const edge of edges) {
-          if (edge.kind === "task") continue;
+          if (edge.kind === "task" || edge.kind === "request" || edge.kind === "hosts") {
+            continue;
+          }
           const a = nodeById(edge.source);
           const b = nodeById(edge.target);
           if (!a || !b) continue;
@@ -2076,7 +2436,8 @@
       function activityDuration(kind) {
         if (kind === "join") return 1.35;
         if (kind === "discovery" || kind === "role") return 2.4;
-        if (kind === "task") return 3.1;
+        if (kind === "request") return 2.8;
+        if (kind === "task") return 1.25;
         if (kind === "backup") return 3.2;
         return 4.2;
       }
@@ -2090,7 +2451,11 @@
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
-        if (edge.kind === "task") {
+        if (edge.kind === "request") {
+          ctx.strokeStyle = `rgba(143, 244, 203, ${highlighted ? 0.48 : 0.11})`;
+          ctx.lineWidth = highlighted ? 1.45 : 0.8;
+          ctx.setLineDash([9, 4]);
+        } else if (edge.kind === "task") {
           ctx.strokeStyle = `rgba(105, 228, 255, ${highlighted ? 0.42 : 0.1})`;
           ctx.lineWidth = highlighted ? 1.35 : 0.8;
           ctx.setLineDash([6, 5]);
@@ -2108,12 +2473,33 @@
           ctx.setLineDash([]);
         }
         ctx.stroke();
+        if (edge.kind === "request" || edge.kind === "task") {
+          const angle = Math.atan2(b.y - a.y, b.x - a.x);
+          const arrowDistance = Math.max(6, b.radius || 8) + 3;
+          const arrowX = b.x - Math.cos(angle) * arrowDistance;
+          const arrowY = b.y - Math.sin(angle) * arrowDistance;
+          ctx.setLineDash([]);
+          ctx.globalAlpha = highlighted ? 0.78 : 0.22;
+          ctx.fillStyle = edge.kind === "request" ? colors.green : colors.cyan;
+          ctx.beginPath();
+          ctx.moveTo(arrowX, arrowY);
+          ctx.lineTo(
+            arrowX - Math.cos(angle - 0.55) * 6,
+            arrowY - Math.sin(angle - 0.55) * 6,
+          );
+          ctx.lineTo(
+            arrowX - Math.cos(angle + 0.55) * 6,
+            arrowY - Math.sin(angle + 0.55) * 6,
+          );
+          ctx.closePath();
+          ctx.fill();
+        }
         ctx.restore();
       }
 
       function drawActivity(event, now, index) {
         const age = Math.max(0, now - event.occurred_at);
-        const duration = activityDuration(event.kind);
+        const duration = event.duration || activityDuration(event.kind);
         if (age > duration) return;
         const a = nodeById(event.source);
         if (!a) return;
@@ -2163,11 +2549,15 @@
                 : colors.orange;
         const active = activities.some(
           (event) => {
-            if (now - event.occurred_at >= activityDuration(event.kind)) return false;
+            const duration = event.duration || activityDuration(event.kind);
+            if (now - event.occurred_at >= duration) return false;
             const targets = event.targets || [event.target];
             return event.source === node.id || targets.includes(node.id);
           },
         );
+        const allocationCount = node.kind === "host"
+          ? demoAssignmentsForHost(node.id).length
+          : 0;
         const joinAge = node.joined_at == null ? Infinity : Math.max(0, now - node.joined_at);
         const joinEase = Math.min(1, joinAge / 0.72);
         const appear = 1 - Math.pow(1 - joinEase, 3);
@@ -2200,6 +2590,28 @@
           ctx.shadowBlur = 14;
           ctx.stroke();
         }
+        if (allocationCount > 1) {
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, radius + 9, 0, Math.PI * 2);
+          ctx.strokeStyle = colors.amber;
+          ctx.globalAlpha = 0.72;
+          ctx.lineWidth = 1.3;
+          ctx.setLineDash([3, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          const badgeX = node.x + radius * 0.82;
+          const badgeY = node.y - radius * 0.82;
+          ctx.beginPath();
+          ctx.arc(badgeX, badgeY, 7, 0, Math.PI * 2);
+          ctx.fillStyle = colors.amber;
+          ctx.globalAlpha = 1;
+          ctx.fill();
+          ctx.fillStyle = "#201204";
+          ctx.font = "bold 7px Inter, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(`${allocationCount}×`, badgeX, badgeY + 0.5);
+        }
         ctx.globalAlpha = (node.online === false ? 0.28 : 1) * Math.max(0.2, appear);
         ctx.fillStyle = color;
         ctx.shadowColor = color;
@@ -2225,6 +2637,25 @@
           ctx.strokeStyle = "rgba(255,255,255,0.72)";
           ctx.lineWidth = 1;
           ctx.stroke();
+          const totalSteps = Math.max(1, node.assignments.length);
+          const arcSpan = (Math.PI * 2) / totalSteps;
+          node.assignments.forEach((assignment, stepIndex) => {
+            ctx.beginPath();
+            ctx.arc(
+              node.x,
+              node.y,
+              radius + 7,
+              -Math.PI / 2 + stepIndex * arcSpan,
+              -Math.PI / 2 + (stepIndex + 1) * arcSpan - 0.035,
+            );
+            ctx.strokeStyle = assignment.status === "active"
+              ? "#ffffff"
+              : assignment.status === "done"
+                ? "rgba(49, 230, 161, 0.78)"
+                : "rgba(105, 228, 255, 0.24)";
+            ctx.lineWidth = assignment.status === "active" ? 2.1 : 1.1;
+            ctx.stroke();
+          });
         } else if (node.kind === "role") {
           ctx.beginPath();
           ctx.moveTo(node.x, node.y - radius);
@@ -2250,9 +2681,17 @@
         ctx.textBaseline = "top";
         ctx.fillStyle = selected ? "#ffffff" : "rgba(225,240,255,0.8)";
         const roleLabelHidden = node.kind === "role" && !selected && nodes.length > 18;
-        if (!roleLabelHidden) {
+        const hostLabelStep = scale >= 1.3 ? 1 : scale >= 0.8 ? 3 : 8;
+        const hostLabelHidden =
+          node.kind === "host" &&
+          demoMode &&
+          DEMO_HOST_COUNT > 120 &&
+          !selected &&
+          node.host_index % hostLabelStep !== 0;
+        if (!roleLabelHidden && !hostLabelHidden) {
           const fontScale = Math.max(scale, node.kind === "role" ? 0.78 : 0.68);
-          ctx.font = `${(node.kind === "role" ? 10 : node.kind === "task" ? 11 : 11.5) / fontScale}px Inter, "Microsoft YaHei", sans-serif`;
+          const fontSize = node.kind === "role" ? 9 : node.kind === "task" ? 10.5 : 11;
+          ctx.font = `${fontSize / fontScale}px Inter, "Microsoft YaHei", sans-serif`;
           const label = node.label.length > 30 ? `${node.label.slice(0, 29)}…` : node.label;
           ctx.fillText(label, node.x, node.y + radius + 7);
         }
@@ -2261,7 +2700,7 @@
           ctx.font = `${9.5 / fontScale}px Inter, "Microsoft YaHei", sans-serif`;
           ctx.fillStyle = "rgba(174, 225, 245, 0.94)";
           ctx.fillText(
-            `${node.participant_ids.length} ${t("hosts")} · ${node.assignments.length} ${t("subtasks")}`,
+            `${node.completed_assignments}/${node.assignments.length} ${t("asyncSteps")} · ${node.target_coverage} ${t("hosts")} · ${node.parallel_width}×`,
             node.x,
             node.y + radius + 7 + 17 / fontScale,
           );
@@ -2285,6 +2724,7 @@
         const width = canvas.clientWidth || 800;
         const height = canvas.clientHeight || 600;
         ctx.clearRect(0, 0, width, height);
+        nodeLookup = new Map(nodes.map((node) => [node.id, node]));
         ctx.save();
         ctx.translate(panX, panY);
         ctx.scale(scale, scale);

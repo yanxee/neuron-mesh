@@ -152,6 +152,62 @@ class RoleView(RoleCreateRequest):
     updated_at: str = ""
 
 
+class TaskStageRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    capability: str = Field(min_length=1, max_length=64)
+    weight: float = Field(default=1.0, ge=0.1, le=10.0)
+
+
+class TaskCreateRequest(BaseModel):
+    objective: str = Field(min_length=1, max_length=4000)
+    stages: list[TaskStageRequest] = Field(
+        default_factory=lambda: [
+            TaskStageRequest(name="Plan and reason", capability="full-model"),
+            TaskStageRequest(name="Retrieve memory", capability="cache"),
+            TaskStageRequest(name="Run inference", capability="inference"),
+            TaskStageRequest(name="Verify result", capability="checkpoint"),
+        ],
+        min_length=1,
+        max_length=32,
+    )
+    target_hosts: int = Field(default=10, ge=1, le=40)
+    max_parallel: int = Field(default=4, ge=1, le=20)
+    requested_tflops: float | None = Field(default=None, gt=0)
+
+
+class TaskAssignmentView(BaseModel):
+    assignment_id: str
+    sequence: int
+    stage_name: str
+    capability: str
+    host_id: str
+    host_name: str
+    status: Literal["pending", "active", "done", "failed"] = "pending"
+    share_percent: float = 100.0
+    allocated_tflops: float = 0.0
+    service_seconds: float | None = None
+    started_at: float | None = None
+    ends_at: float | None = None
+    completed_at: float | None = None
+
+
+class TaskView(BaseModel):
+    task_id: str
+    objective: str
+    requester_host_id: str
+    target_hosts: int
+    participant_count: int
+    max_parallel: int
+    requested_tflops: float
+    granted_tflops: float
+    status: Literal["pending", "running", "complete", "failed"] = "pending"
+    execution_mode: Literal["coordination"] = "coordination"
+    created_at: float
+    service_start_at: float
+    completed_at: float | None = None
+    assignments: list[TaskAssignmentView] = Field(default_factory=list)
+
+
 class SpatialSessionOpen(BaseModel):
     role_id: str
     owner_id: str

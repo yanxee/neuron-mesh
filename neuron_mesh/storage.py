@@ -118,6 +118,52 @@ class Database:
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
                 );
+
+                CREATE TABLE IF NOT EXISTS tasks (
+                    task_id TEXT PRIMARY KEY,
+                    objective TEXT NOT NULL,
+                    requester_host_id TEXT NOT NULL,
+                    target_hosts INTEGER NOT NULL,
+                    max_parallel INTEGER NOT NULL,
+                    requested_tflops REAL NOT NULL,
+                    granted_tflops REAL NOT NULL,
+                    status TEXT NOT NULL,
+                    execution_mode TEXT NOT NULL,
+                    created_at REAL NOT NULL,
+                    service_start_at REAL NOT NULL,
+                    completed_at REAL
+                );
+
+                CREATE INDEX IF NOT EXISTS tasks_status
+                    ON tasks(status, created_at);
+
+                CREATE TABLE IF NOT EXISTS task_assignments (
+                    assignment_id TEXT PRIMARY KEY,
+                    task_id TEXT NOT NULL REFERENCES tasks(task_id)
+                        ON DELETE CASCADE,
+                    sequence INTEGER NOT NULL,
+                    stage_name TEXT NOT NULL,
+                    stage_weight REAL NOT NULL,
+                    capability TEXT NOT NULL,
+                    host_id TEXT NOT NULL,
+                    host_name TEXT NOT NULL,
+                    host_endpoint TEXT NOT NULL,
+                    host_capacity_tflops REAL NOT NULL,
+                    status TEXT NOT NULL,
+                    share_percent REAL NOT NULL,
+                    allocated_tflops REAL NOT NULL,
+                    service_seconds REAL,
+                    started_at REAL,
+                    ends_at REAL,
+                    completed_at REAL,
+                    UNIQUE(task_id, sequence)
+                );
+
+                CREATE INDEX IF NOT EXISTS task_assignments_task
+                    ON task_assignments(task_id, sequence);
+
+                CREATE INDEX IF NOT EXISTS task_assignments_status
+                    ON task_assignments(status, ends_at);
                 """
             )
 

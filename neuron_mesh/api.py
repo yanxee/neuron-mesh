@@ -35,12 +35,15 @@ from .models import (
     ShutdownReceipt,
     SpatialEvent,
     SpatialSessionOpen,
+    TaskCreateRequest,
+    TaskView,
 )
 from .peers import PeerMesh
 from .roles import RoleMigrationService, RoleStore
 from .security import MemoryCipher, NodeIdentity, b64d, b64e, bearer_matches
 from .spatial import SpatialManager
 from .storage import Database, utc_now
+from .tasks import TaskScheduler, estimate_tflops
 
 logger = logging.getLogger("neuron_mesh")
 GRAPH_HTML_PATH = Path(__file__).with_name("graph.html")
@@ -52,6 +55,66 @@ def _node_graph_id(node_id: str) -> str:
 
 def _role_graph_id(role_id: str) -> str:
     return f"role:{role_id}"
+
+
+def _task_graph_id(task_id: str) -> str:
+    return f"task:{task_id}"
+
+
+def _task_graph_node(task: TaskView) -> dict[str, object]:
+    participant_ids = sorted(
+        {_node_graph_id(assignment.host_id) for assignment in task.assignments}
+    )
+    coordinator = max(
+        task.assignments,
+        key=lambda assignment: assignment.allocated_tflops,
+        default=None,
+    )
+    objective = task.objective if len(task.objective) <= 80 else f"{task.objective[:79]}…"
+    return {
+        "id": _task_graph_id(task.task_id),
+        "kind": "task",
+        "code": f"T-{task.task_id[:6]}",
+        "title": {"en": task.objective, "zh": task.objective},
+        "objective": {"en": task.objective, "zh": task.objective},
+        "label": objective,
+        "status": task.status,
+        "execution_mode": task.execution_mode,
+        "requester_id": _node_graph_id(task.requester_host_id),
+        "coordinator_id": (
+            _node_graph_id(coordinator.host_id) if coordinator else None
+        ),
+        "target_coverage": task.participant_count,
+        "parallel_width": task.max_parallel,
+        "participant_ids": participant_ids,
+        "requested_tflops": task.requested_tflops,
+        "compute_tflops": task.granted_tflops,
+        "started_at": task.created_at,
+        "expires_at": (task.completed_at or time.time()) + 300,
+        "assignments": [
+            {
+                "assignment_id": assignment.assignment_id,
+                "sequence": assignment.sequence,
+                "stage_index": assignment.sequence,
+                "slot_index": 0,
+                "stage_name": assignment.stage_name,
+                "capability": assignment.capability,
+                "capabilities": [assignment.capability],
+                "host_id": _node_graph_id(assignment.host_id),
+                "contribution": {
+                    "en": "coordinated stage",
+                    "zh": "协同阶段",
+                },
+                "status": assignment.status,
+                "share_percent": assignment.share_percent,
+                "allocated_tflops": assignment.allocated_tflops,
+                "service_seconds": assignment.service_seconds,
+                "started_at": assignment.started_at,
+                "ends_at": assignment.ends_at,
+            }
+            for assignment in task.assignments
+        ],
+    }
 
 
 @dataclass(slots=True)
@@ -69,6 +132,7 @@ class Runtime:
     migrations: RoleMigrationService
     spatial: SpatialManager
     activity: ActivityBus
+    tasks: TaskScheduler
     resident_state: str = "resident"
     maintenance_task: asyncio.Task[None] | None = None
 
@@ -86,6 +150,22 @@ def _memory_roots(records: list[Any]) -> str:
     for memory_id in sorted(record.memory_id for record in records):
         digest.update(memory_id.encode("ascii"))
     return f"sha256:{digest.hexdigest()}"
+
+
+def _capability_graph_fields(capability: Any) -> dict[str, object]:
+    compute = capability.compute
+    return {
+        "compute_tflops": estimate_tflops(capability),
+        "capabilities": capability.service_roles,
+        "region": capability.network.failure_domain,
+        "hardware": {
+            "cpu_cores": compute.cpu_count,
+            "memory_gb": round(compute.ram_available_bytes / 1024**3, 1),
+            "accelerator": compute.gpu_name or compute.cpu_model,
+            "storage_tb": round(capability.storage_capacity_bytes / 1024**4, 2),
+            "bandwidth_gbps": None,
+        },
+    }
 
 
 async def _drain_runtime(state: Runtime) -> ShutdownReceipt:
@@ -151,6 +231,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         spatial = SpatialManager(roles)
         activity = ActivityBus()
+        tasks = TaskScheduler(
+            configured,
+            database,
+            identity.node_id,
+            capabilities,
+            peers,
+            activity,
+        )
         backend = LocalBackend(configured)
         runtime = Runtime(
             settings=configured,
@@ -166,6 +254,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             migrations=migrations,
             spatial=spatial,
             activity=activity,
+            tasks=tasks,
         )
         app.state.runtime = runtime
 
@@ -179,6 +268,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 await asyncio.sleep(min(configured.peer_refresh_seconds, 30))
 
         await peers.start()
+        runtime.tasks.start()
         runtime.maintenance_task = asyncio.create_task(maintenance(), name="maintenance")
         try:
             yield
@@ -188,6 +278,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 await asyncio.gather(
                     runtime.maintenance_task, return_exceptions=True
                 )
+            await runtime.tasks.stop()
             if runtime.resident_state != "draining":
                 try:
                     receipt = await asyncio.wait_for(_drain_runtime(runtime), timeout=15)
@@ -298,6 +389,39 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             for peer in runtime(request).peers.list_live()
         ]
 
+    @app.post("/v1/tasks", response_model=TaskView, dependencies=[Depends(auth)])
+    async def create_task(payload: TaskCreateRequest, request: Request) -> TaskView:
+        try:
+            return await runtime(request).tasks.create(payload)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.get(
+        "/v1/tasks",
+        response_model=list[TaskView],
+        dependencies=[Depends(auth)],
+    )
+    async def list_tasks(
+        request: Request,
+        include_complete: bool = Query(default=True),
+        limit: int = Query(default=20, ge=1, le=100),
+    ) -> list[TaskView]:
+        return runtime(request).tasks.list(
+            limit=limit,
+            include_complete=include_complete,
+        )
+
+    @app.get(
+        "/v1/tasks/{task_id}",
+        response_model=TaskView,
+        dependencies=[Depends(auth)],
+    )
+    async def get_task(task_id: str, request: Request) -> TaskView:
+        task = runtime(request).tasks.get(task_id)
+        if task is None:
+            raise HTTPException(status_code=404, detail="task not found")
+        return task
+
     @app.post("/v1/peers/announce", dependencies=[Depends(auth)])
     async def announce_peer(payload: PeerAnnouncement, request: Request) -> dict[str, object]:
         state = runtime(request)
@@ -318,6 +442,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         state = runtime(request)
         local_capability = state.capabilities.current(state.resident_state)
         peers = state.peers.list_live()
+        host_count = 1 + len(peers)
         nodes: list[dict[str, object]] = [
             {
                 "id": _node_graph_id(state.identity.node_id),
@@ -336,6 +461,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 "resident_state": state.resident_state,
                 "service_roles": local_capability.service_roles,
                 "rtt_ms": None,
+                **_capability_graph_fields(local_capability),
             }
         ]
         edges: list[dict[str, object]] = []
@@ -358,6 +484,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "resident_state": peer.capability.resident_state,
                     "service_roles": peer.capability.service_roles,
                     "rtt_ms": peer.rtt_ms,
+                    **_capability_graph_fields(peer.capability),
                 }
             )
             edges.append(
@@ -433,6 +560,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     }
                 )
 
+        task_views = state.tasks.list(limit=12)
+        for task in task_views:
+            nodes.append(_task_graph_node(task))
+        active_task_count = sum(
+            1 for task in task_views if task.status in {"pending", "running"}
+        )
         activity = state.activity.snapshot(max_age_seconds=20)
         return {
             "server_time": time.time(),
@@ -442,8 +575,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 else "offline-autonomous"
             ),
             "summary": {
-                "hosts": len(nodes) - len(roles_by_id),
+                "hosts": host_count,
                 "roles": len(roles_by_id),
+                "tasks": active_task_count,
                 "live_edges": sum(1 for edge in edges if edge["online"]),
                 "recent_activity": len(activity),
             },

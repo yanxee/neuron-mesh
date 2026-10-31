@@ -6,7 +6,9 @@ import uuid
 from collections import deque
 from typing import Literal
 
-ActivityKind = Literal["discovery", "compute", "storage", "role"]
+ActivityKind = Literal[
+    "discovery", "compute", "storage", "role", "request", "task"
+]
 
 
 class ActivityBus:
@@ -23,15 +25,34 @@ class ActivityBus:
         target_id: str,
         kind: ActivityKind,
         *,
-        detail: str = "",
+        detail: str | dict[str, str] = "",
     ) -> dict[str, object]:
+        return self.record_many(
+            source_id,
+            [target_id],
+            kind,
+            detail=detail,
+        )
+
+    def record_many(
+        self,
+        source_id: str,
+        target_ids: list[str],
+        kind: ActivityKind,
+        *,
+        detail: str | dict[str, str] = "",
+        duration: float | None = None,
+    ) -> dict[str, object]:
+        targets = [target for target in target_ids if target]
+        if not targets:
+            raise ValueError("activity requires at least one target")
         now = time.time()
         with self._lock:
             if self._events:
                 previous = self._events[-1]
                 if (
                     previous["source"] == source_id
-                    and previous["target"] == target_id
+                    and previous.get("targets", [previous["target"]]) == targets
                     and previous["kind"] == kind
                     and now - float(previous["occurred_at"]) < 1.5
                 ):
@@ -39,9 +60,11 @@ class ActivityBus:
             event = {
                 "id": uuid.uuid4().hex,
                 "source": source_id,
-                "target": target_id,
+                "target": targets[0],
+                "targets": targets,
                 "kind": kind,
                 "detail": detail,
+                "duration": duration,
                 "occurred_at": now,
             }
             self._events.append(event)
