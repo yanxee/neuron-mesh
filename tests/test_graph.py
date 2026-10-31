@@ -34,7 +34,9 @@ def test_graph_dashboard_exposes_roles_relations_and_activity(tmp_path: Path) ->
         assert "requested_tflops" in page.text
         assert "share_percent" in page.text
         assert "nextCoverageTarget" in page.text
+        assert "nextParallelWidth" in page.text
         assert "asyncDispatchTask" in page.text
+        assert "serviceDurationForAssignment" in page.text
 
         assert client.get("/v1/observability/graph").status_code == 401
         assert client.get("/v1/roles/summary").status_code == 401

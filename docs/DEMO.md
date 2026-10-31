@@ -94,10 +94,16 @@ and 40 hosts to each plan. Select the task hub to inspect the objective, request
 ingress, random coverage size, lead host, allocated capacity and every host
 assignment.
 
-A task does not hold simultaneous connections to all planned workers. Each stage
-dispatches to one host, shows a short animated communication window, and advances
-to the next host after the call finishes. Small one-host plans bundle several
-stages on one machine; large plans spread stages across up to 40 shard workers.
+A task does not hold simultaneous connections to all planned workers. Each
+asynchronous batch contacts a random 1–20 hosts, shows a short animated
+communication window, and advances to the next batch after the calls finish.
+Small one-host plans bundle several stages on one machine; large plans spread
+stages across up to 40 shard workers.
+
+Each assignment has an independent service deadline calculated from allocated
+TFLOPS, stage complexity and deterministic jitter. Faster or better-funded hosts
+complete first and free a concurrency slot for another waiting host; slower hosts
+remain connected longer. This makes call overlap and release visibly uneven.
 
 The scheduler keeps up to three requests active at once, each initiated by a
 different ingress host. Green request pulses show host-to-task intent, while cyan

@@ -10,11 +10,13 @@
 - Add a deterministic 50-host fleet-join visualization with hardware, compute,
   capability, Agent-role and cross-failure-domain redundancy details.
 - Add task-driven asynchronous scheduling with decomposable objectives and
-  single-worker communication pulses across heterogeneous hosts.
+  random 1–20-host communication batches across heterogeneous hosts.
 - Add concurrent ingress requests, shared host leases, proportional allocation
   views and automatic task replacement.
 - Add shuffled 1–40 host coverage plans with bundled low-resource stages and
   sharded high-coverage stages.
+- Add random 1–20-host concurrency windows with independent per-host service
+  duration, staggered completion and just-in-time slot refill.
 
 ## 0.2.0 - 2026-10-30
 

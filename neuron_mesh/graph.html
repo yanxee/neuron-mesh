@@ -533,6 +533,8 @@
           objective: "Objective",
           taskStatus: "Task status",
           coverageTarget: "Random host coverage",
+          parallelSlots: "Concurrent calls",
+          activeCalls: "Active calls",
           participants: "Participating hosts",
           computeBudget: "Participant capacity",
           coordinator: "Lead host",
@@ -625,6 +627,8 @@
           objective: "计算目标",
           taskStatus: "任务状态",
           coverageTarget: "随机覆盖规模",
+          parallelSlots: "并发调用数",
+          activeCalls: "通信中",
           participants: "参与主机",
           computeBudget: "参与算力",
           coordinator: "主控主机",
@@ -1285,6 +1289,11 @@
         return coverageDeck[coverageCursor++];
       }
 
+      function nextParallelWidth(coverage) {
+        if (coverage <= 1) return 1;
+        return 1 + Math.floor(demoRandom() * Math.min(20, coverage));
+      }
+
       function addDemoActivity(source, target, kind, detail = "", options = {}) {
         const now = Date.now() / 1000 + clockOffset;
         const targets = (Array.isArray(target) ? target : [target]).filter(Boolean);
@@ -1625,14 +1634,11 @@
         );
         const participants = [...new Set(assignments.map((item) => item.host_id))];
         if (participants.length < 1) return null;
+        const parallelWidth = nextParallelWidth(participants.length);
 
         const now = Date.now() / 1000 + clockOffset;
         const taskId = `task:${demoGeneration}:${nextTaskSequence}`;
         nextTaskSequence += 1;
-        const dispatchGap = Math.max(
-          0.34,
-          Math.min(1.2, 8 / Math.max(1, targetCoverage)),
-        );
         const position = chooseTaskPosition();
         const coordinator = participants
           .map((hostId) => demoPlan.hostsById.get(hostId))
@@ -1646,6 +1652,7 @@
           label: `${task.code} · ${localizedText(task.title)}`,
           status: "running",
           target_coverage: targetCoverage,
+          parallel_width: parallelWidth,
           assignments,
           participant_ids: participants,
           compute_tflops: 0,
@@ -1654,11 +1661,10 @@
           coordinator_id: coordinator?.id || participants[0],
           stage_cursor: 0,
           completed_assignments: 0,
-          active_assignment_index: null,
-          dispatch_gap: dispatchGap,
-          next_dispatch_at: now + 2.2,
+          active_assignment_indices: [],
+          service_start_at: now + 2.2,
           started_at: now,
-          expires_at: now + 7.2 + targetCoverage * dispatchGap,
+          expires_at: now + 300,
           joined_at: now,
           reveal_at: now,
           pinned_x: position.x,
@@ -1757,39 +1763,62 @@
         }
       }
 
+      function serviceDurationForAssignment(task, assignment) {
+        const host = demoPlan?.hostsById.get(assignment.host_id);
+        const allocated = Math.max(0.5, Number(assignment.allocated_tflops || 0));
+        const stageWeight = 0.88 + (assignment.stage_index % 5) * 0.065;
+        const jitter = 0.78 + demoRandom() * 0.66;
+        const duration = (0.55 + 5.4 / Math.sqrt(allocated + 1)) *
+          stageWeight *
+          jitter;
+        return Math.max(0.65, Math.min(4.8, duration));
+      }
+
       function asyncDispatchTask(task, now) {
-        const previousIndex = task.active_assignment_index;
-        if (previousIndex != null) {
-          const previous = task.assignments[previousIndex];
-          if (previous?.status === "active") {
-            previous.status = "done";
+        const stillActive = [];
+        (task.active_assignment_indices || []).forEach((assignmentIndex) => {
+          const assignment = task.assignments[assignmentIndex];
+          if (assignment?.status !== "active") return;
+          if (assignment.ends_at <= now) {
+            assignment.status = "done";
             task.completed_assignments += 1;
+          } else {
+            stillActive.push(assignmentIndex);
           }
-        }
-        const nextIndex = task.assignments.findIndex(
-          (assignment) => assignment.status === "pending",
-        );
-        if (nextIndex < 0) {
+        });
+        task.active_assignment_indices = stillActive;
+        if (now < task.service_start_at) return;
+
+        const pendingIndices = task.assignments
+          .map((assignment, index) => ({ assignment, index }))
+          .filter((item) => item.assignment.status === "pending")
+          .map((item) => item.index);
+        if (!pendingIndices.length && !stillActive.length) {
           task.status = "complete";
-          task.active_assignment_index = null;
           task.expires_at = now + 2.2;
           updateDashboardMetrics();
           if (selectedId === task.id) renderDetails();
           return;
         }
-        const assignment = task.assignments[nextIndex];
-        assignment.status = "active";
-        task.active_assignment_index = nextIndex;
-        task.stage_cursor = assignment.stage_index;
-        task.next_dispatch_at = now + task.dispatch_gap;
-        const eventDuration = Math.max(0.22, task.dispatch_gap * 0.78);
-        addDemoActivity(task.id, [assignment.host_id], "task", {
-          en: `Async ${nextIndex + 1}/${task.assignments.length} · ${assignment.stage_name.en} · ${assignment.share_percent}% allocation`,
-          zh: `异步阶段 ${nextIndex + 1}/${task.assignments.length} · ${assignment.stage_name.zh} · 分配 ${assignment.share_percent}%`,
-        }, {
-          duration: eventDuration,
+
+        const freeSlots = Math.max(0, task.parallel_width - stillActive.length);
+        const nextBatch = pendingIndices.slice(0, freeSlots);
+        nextBatch.forEach((assignmentIndex) => {
+          const assignment = task.assignments[assignmentIndex];
+          const duration = serviceDurationForAssignment(task, assignment);
+          assignment.status = "active";
+          assignment.started_at = now;
+          assignment.ends_at = now + duration;
+          assignment.service_seconds = duration;
+          task.active_assignment_indices.push(assignmentIndex);
+          addDemoActivity(task.id, [assignment.host_id], "task", {
+            en: `Async call ${assignmentIndex + 1}/${task.assignments.length} · ${assignment.stage_name.en} · service ${duration.toFixed(1)}s`,
+            zh: `异步调用 ${assignmentIndex + 1}/${task.assignments.length} · ${assignment.stage_name.zh} · 服务 ${duration.toFixed(1)} 秒`,
+          }, {
+            duration,
+          });
         });
-        if (selectedId === task.id) renderDetails();
+        if (nextBatch.length && selectedId === task.id) renderDetails();
       }
 
       function demoPulse() {
@@ -1807,10 +1836,9 @@
           tasks = activeDemoTasks();
         }
         if (!tasks.length) return;
-        const dueTasks = tasks.filter((task) => now >= task.next_dispatch_at);
-        if (!dueTasks.length) return;
-        const task = dueTasks[demoPulseIndex % dueTasks.length];
-        asyncDispatchTask(task, now);
+        tasks
+          .filter((task) => now >= task.service_start_at)
+          .forEach((task) => asyncDispatchTask(task, now));
       }
 
       function clearDemoRun() {
@@ -2088,6 +2116,8 @@
           rows.push([t("taskStatus"), node.status]);
           rows.push([t("requestedBy"), labelForNodeId(node.requester_id)]);
           rows.push([t("coverageTarget"), `${node.target_coverage} ${t("hosts")}`]);
+          rows.push([t("parallelSlots"), String(node.parallel_width || 1)]);
+          rows.push([t("activeCalls"), String(node.active_assignment_indices?.length || 0)]);
           rows.push([t("participants"), String(node.participant_ids?.length || 0)]);
           rows.push([t("requestedCompute"), `${formatNumber(node.requested_tflops)} TFLOPS`]);
           rows.push([t("grantedCompute"), `${formatNumber(node.compute_tflops)} TFLOPS`]);
@@ -2141,7 +2171,10 @@
             const taskCapabilities = (assignment.capabilities || [assignment.capability])
               .map(capabilityLabel)
               .join(" + ");
-            detail.textContent = `${t(assignment.status || "pending")} · ${labelForNodeId(assignment.host_id)} · ${localizedText(assignment.contribution)} · ${taskCapabilities} · ${assignment.share_percent}% · ${formatNumber(assignment.allocated_tflops)} TF`;
+            const serviceTime = assignment.service_seconds
+              ? ` · ${assignment.service_seconds.toFixed(1)}s`
+              : "";
+            detail.textContent = `${t(assignment.status || "pending")} · ${labelForNodeId(assignment.host_id)} · ${localizedText(assignment.contribution)} · ${taskCapabilities} · ${assignment.share_percent}% · ${formatNumber(assignment.allocated_tflops)} TF${serviceTime}`;
             step.append(stage, detail);
             section.append(step);
           });
@@ -2173,7 +2206,10 @@
               const heading = document.createElement("strong");
               heading.textContent = `${task.code} · ${localizedText(task.title)}`;
               const detail = document.createElement("span");
-              detail.textContent = `${t(assignment.status || "pending")} · ${localizedText(assignment.stage_name)} · ${localizedText(assignment.contribution)} · ${assignment.share_percent}% · ${formatNumber(assignment.allocated_tflops)} TF`;
+              const serviceTime = assignment.service_seconds
+                ? ` · ${assignment.service_seconds.toFixed(1)}s`
+                : "";
+              detail.textContent = `${t(assignment.status || "pending")} · ${localizedText(assignment.stage_name)} · ${localizedText(assignment.contribution)} · ${assignment.share_percent}% · ${formatNumber(assignment.allocated_tflops)} TF${serviceTime}`;
               card.append(heading, detail);
               section.append(card);
             });
@@ -2624,7 +2660,7 @@
           ctx.font = `${9.5 / fontScale}px Inter, "Microsoft YaHei", sans-serif`;
           ctx.fillStyle = "rgba(174, 225, 245, 0.94)";
           ctx.fillText(
-            `${node.completed_assignments}/${node.assignments.length} ${t("asyncSteps")} · ${node.target_coverage} ${t("hosts")}`,
+            `${node.completed_assignments}/${node.assignments.length} ${t("asyncSteps")} · ${node.target_coverage} ${t("hosts")} · ${node.parallel_width}×`,
             node.x,
             node.y + radius + 7 + 17 / fontScale,
           );

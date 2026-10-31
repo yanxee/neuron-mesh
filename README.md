@@ -21,7 +21,7 @@
 
 **Search terms:** decentralized AI · distributed inference · large language models · LLM network · peer-to-peer AI · federated learning · continual learning · persistent memory · long-term memory · heterogeneous computing · edge AI · multi-modal AI · OpenAI-compatible API · 去中心化大模型 · 分布式推理 · 联邦学习 · 长期记忆 · 异构算力
 
-![NeuronMesh graph with concurrent ingress requests, random 1–40 host coverage and asynchronous task dispatch](docs/assets/fleet50-dashboard.png)
+![NeuronMesh graph with concurrent ingress requests, random host coverage, 1–20 concurrent calls and unequal per-host service windows](docs/assets/fleet50-dashboard.png)
 
 ## Help build the measurable network
 
@@ -163,8 +163,10 @@ The graph asks for the configured bearer token and keeps it in tab memory only. 
 Open <http://127.0.0.1:8000/graph?demo=fleet50> for a browser-generated 50-host
 fleet rehearsal. This visual simulation does not claim that 50 real nodes exist.
 The rehearsal also cycles through five task objectives and randomly covers between
-1 and 40 hosts for each decomposed plan. A task contacts one stage worker at a
-time, waits for its call window, then proceeds to the next host asynchronously.
+1 and 40 hosts for each decomposed plan. Each asynchronous batch contacts a random
+1–20 hosts at once. Every call keeps its own service deadline derived from host
+capacity, allocated share and stage work, so slow or lightly funded hosts remain
+connected longer while faster hosts release their slots earlier.
 Up to three entry hosts can request resources concurrently; shared hosts expose
 their per-task compute percentages, and expired requests are replaced and
 rebalanced automatically.

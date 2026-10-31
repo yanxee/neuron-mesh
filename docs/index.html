@@ -140,15 +140,16 @@
           animated pulses on the corresponding relationship line. A browser-generated
           rehearsal introduces 50 heterogeneous hosts with hardware, compute, Agent roles
           and cross-domain redundancy. Up to three ingress hosts can request capacity
-          at the same time. Each decomposed plan randomly covers 1–40 hosts, then calls
-          one stage worker at a time asynchronously with shared-host allocations and
-          automatic rebalancing.
+          at the same time. Each decomposed plan randomly covers 1–40 hosts, then
+          asynchronously contacts a random 1–20 host batch with shared-host
+          allocations, automatically rebalanced capacity and per-host service
+          deadlines that finish at different times.
         </p>
         <div class="actions compact-actions">
           <a class="secondary" href="https://github.com/yanxee/neuron-mesh/blob/main/docs/DEMO.md#6-preview-a-50-host-fleet">Preview 50 hosts</a>
         </div>
       </div>
-      <img class="graph-preview" src="assets/fleet50-dashboard.png" alt="NeuronMesh graph showing concurrent ingress requests, shared host allocations and asynchronous task dispatch">
+      <img class="graph-preview" src="assets/fleet50-dashboard.png" alt="NeuronMesh graph showing concurrent ingress requests, 1–20 concurrent calls and unequal per-host service windows">
     </section>
 
     <section class="research">

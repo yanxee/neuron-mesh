@@ -134,14 +134,15 @@
           远端推理和加密存储支持发生时，对应关系线会出现短暂的发光与流动脉冲。
           浏览器生成的演练会逐个加入 50 台异构主机，并展示硬件、算力、Agent 角色
           和跨故障域冗余关系。最多 3 个入口主机可并发申请资源；每个拆解后的
-          计划随机覆盖 1–40 台主机，再按阶段逐台异步调用，并展示共享主机分配
-          和自动再平衡。
+          计划随机覆盖 1–40 台主机，再以随机 1–20 台为一个异步批次进行调用，
+          并展示共享主机分配、自动再平衡，以及每个主机独立计算、结束时间不同的
+          通信服务窗口。
         </p>
         <div class="actions compact-actions">
           <a class="secondary" href="https://github.com/yanxee/neuron-mesh/blob/main/docs/DEMO.zh-CN.md#6-预览-50-台主机的虚拟集群">预览 50 台主机</a>
         </div>
       </div>
-      <img class="graph-preview" src="../assets/fleet50-dashboard.png" alt="NeuronMesh 关系图，显示多入口并发申请、共享主机资源分配和异步任务调度">
+      <img class="graph-preview" src="../assets/fleet50-dashboard.png" alt="NeuronMesh 关系图，显示多入口并发申请、1–20 台并发调用和主机独立服务时长">
     </section>
 
     <section class="research">
