@@ -19,7 +19,7 @@
 
 **Search terms / 搜索关键词：** decentralized AI · distributed inference · large language models · LLM network · peer-to-peer AI · federated learning · continual learning · persistent memory · long-term memory · heterogeneous computing · edge AI · multi-modal AI · OpenAI-compatible API · 去中心化大模型 · 分布式推理 · 联邦学习 · 长期记忆 · 异构算力
 
-![NeuronMesh 实时主机与角色关系图](docs/assets/graph-dashboard.png)
+![NeuronMesh 50 台虚拟主机、Agent 角色与硬件资源关系图](docs/assets/fleet50-dashboard.png)
 
 ## 参与建设可度量的网络
 
@@ -71,6 +71,8 @@ NeuronMesh 关注的不是再包装一个聊天 API，而是探索大模型基�
 - `status`/`drain` 运维命令和 `/readyz` 就绪探测；
 - 双节点 Docker Compose、本地测试和 GitHub Actions CI。
 - 类似 Obsidian 的主机、虚拟角色与跨节点活动实时关系图；
+- 确定性的 50 台虚拟主机加入动画，可查看硬件、算力、能力、Agent 角色和
+  跨故障域冗余备份；
 - 节点发现、远端算力和加密存储支持时，关系线会发光闪烁。
 
 ## 尚未实现
@@ -168,6 +170,9 @@ API 文档：<http://127.0.0.1:8000/docs>
 
 关系图会要求输入配置的 Bearer Token，并仅在当前标签页内存中保存。可运行
 `python scripts/graph_demo.py --open` 启动带主机、角色和活动的双节点演示。
+打开 <http://127.0.0.1:8000/graph?demo=fleet50> 可观看由浏览器生成的
+50 台虚拟主机加入、算力分配、Agent 角色和跨故障域冗余备份演练。该页面不会
+伪造真实在线节点或资源承诺。
 
 ## 运行与维护
 
