@@ -24,8 +24,9 @@ def test_graph_dashboard_exposes_roles_relations_and_activity(tmp_path: Path) ->
         assert "/v1/observability/graph" in page.text
         assert "graphCanvas" in page.text
         assert "实时主机、角色与活动" in page.text
-        assert "fleet256" in page.text
-        assert "0 / 256" in page.text
+        assert "demoParameter" in page.text
+        assert "demoHostCount" in page.text
+        assert "2048" in page.text
         assert "buildFleetPlan" in page.text
         assert "redundancy_peer_ids" in page.text
         assert "taskTemplates" in page.text
@@ -97,4 +98,6 @@ def test_public_graph_demo_matches_packaged_dashboard() -> None:
     root = Path(__file__).resolve().parents[1]
     packaged = (root / "neuron_mesh" / "graph.html").read_bytes()
     public_demo = (root / "docs" / "graph-demo.html").read_bytes()
+    versioned_demo = (root / "docs" / "graph-demo-256-chaos.html").read_bytes()
     assert public_demo == packaged
+    assert versioned_demo == packaged
