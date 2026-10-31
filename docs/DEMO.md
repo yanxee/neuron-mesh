@@ -83,8 +83,14 @@ the browser and never writes it to the node database. The animation introduces
 256 heterogeneous hosts in sequence. Select any host to inspect its CPU, memory,
 accelerator, storage, network, compute estimate, capability tags, failure domain
 and two cross-domain redundancy peers. Purple diamond nodes represent the Agent
-hosted on each machine. This is a visual rehearsal, not evidence of 50 physical
+hosted on each machine. This is a visual rehearsal, not evidence of 256 physical
 nodes or pledged capacity.
+
+The first 256-host layout intentionally uses a chaos-first cloud instead of
+rings, grids or domain grouping. Per-host target points and off-screen entry
+vectors are randomized per run. Failure-domain metadata remains visible in host
+details but does not influence this layout yet; a grouped view can be added as a
+separate mode later.
 
 After the fleet is assembled, a cyan task hub appears. The demo cycles through
 five objectives such as long-context research, multimodal understanding,
