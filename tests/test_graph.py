@@ -24,12 +24,20 @@ def test_graph_dashboard_exposes_roles_relations_and_activity(tmp_path: Path) ->
         assert "/v1/observability/graph" in page.text
         assert "graphCanvas" in page.text
         assert "实时主机、角色与活动" in page.text
-        assert "fleet50" in page.text
+        assert "fleet256" in page.text
+        assert "0 / 256" in page.text
         assert "buildFleetPlan" in page.text
         assert "redundancy_peer_ids" in page.text
         assert "taskTemplates" in page.text
         assert "activateDemoTask" in page.text
         assert "event.targets" in page.text
+        assert "activeDemoTasks" in page.text
+        assert "requested_tflops" in page.text
+        assert "share_percent" in page.text
+        assert "nextCoverageTarget" in page.text
+        assert "nextParallelWidth" in page.text
+        assert "asyncDispatchTask" in page.text
+        assert "serviceDurationForAssignment" in page.text
 
         assert client.get("/v1/observability/graph").status_code == 401
         assert client.get("/v1/roles/summary").status_code == 401
@@ -83,3 +91,10 @@ def test_graph_dashboard_exposes_roles_relations_and_activity(tmp_path: Path) ->
             edge for edge in payload["edges"] if edge["kind"] == "hosts"
         ).items()
         assert {event["kind"] for event in payload["activity"]} >= {"role"}
+
+
+def test_public_graph_demo_matches_packaged_dashboard() -> None:
+    root = Path(__file__).resolve().parents[1]
+    packaged = (root / "neuron_mesh" / "graph.html").read_bytes()
+    public_demo = (root / "docs" / "graph-demo.html").read_bytes()
+    assert public_demo == packaged
