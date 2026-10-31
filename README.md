@@ -169,7 +169,7 @@ Change `fleet256` to another supported size, such as `fleet50`, `fleet186` or
 The same browser-only demo is published at
 <https://yanxee.github.io/neuron-mesh/graph-demo.html?demo=fleet256>.
 Use the cache-safe URL
-<https://yanxee.github.io/neuron-mesh/graph-demo-256-chaos.html?demo=fleet256>
+<https://yanxee.github.io/neuron-mesh/graph-demo-256-chaos.html?demo=fleet256&v=chaos3>
 after layout updates.
 The rehearsal also cycles through five task objectives and randomly covers between
 1 and 40 hosts for each decomposed plan. Each asynchronous batch contacts a random

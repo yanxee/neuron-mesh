@@ -20,7 +20,7 @@
 - Replace the regular 256-node radial layout with a chaos-first host cloud,
   independent off-screen entry vectors and zoom-dependent label sampling.
 - Allow `demo=fleetN` and `demo=N` to configure 1–2048 hosts with adaptive join
-  timing, sampled repulsion, dynamic scaling and label thinning.
+  timing, random home springs, dynamic scaling and label thinning.
 - Add random 1–20-host concurrency windows with independent per-host service
   duration, staggered completion and just-in-time slot refill.
 
