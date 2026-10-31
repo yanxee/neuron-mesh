@@ -58,3 +58,15 @@ neuron-mesh serve --host 127.0.0.1 --port 8000
 3. `/v1/memory/search`
 4. `/v1/chat/completions`
 5. `/v1/node/drain`
+
+## 5. 打开实时关系图
+
+运行带示例主机、角色和活动的关系图演示：
+
+```bash
+python scripts/graph_demo.py --open
+```
+
+打开 <http://127.0.0.1:18082/graph> 并输入终端打印的 Token。可以拖拽平移、
+滚轮缩放，并选择节点查看详情。节点公告、远端算力和加密存储支持发生时，
+对应关系线会在短时间内发光闪烁。
