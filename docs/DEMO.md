@@ -72,15 +72,15 @@ scroll to zoom and select a node to inspect it. Peer announcements, remote
 compute and encrypted-storage support animate the corresponding relationship
 line for a short time.
 
-## 6. Preview a 50-host fleet
+## 6. Preview a 256-host fleet
 
 With the node service running, open:
 
-<http://127.0.0.1:8000/graph?demo=fleet50>
+<http://127.0.0.1:8000/graph?demo=fleet256>
 
 No token is required because this route creates deterministic synthetic data in
 the browser and never writes it to the node database. The animation introduces
-50 heterogeneous hosts in sequence. Select any host to inspect its CPU, memory,
+256 heterogeneous hosts in sequence. Select any host to inspect its CPU, memory,
 accelerator, storage, network, compute estimate, capability tags, failure domain
 and two cross-domain redundancy peers. Purple diamond nodes represent the Agent
 hosted on each machine. This is a visual rehearsal, not evidence of 50 physical
@@ -89,9 +89,54 @@ nodes or pledged capacity.
 After the fleet is assembled, a cyan task hub appears. The demo cycles through
 five objectives such as long-context research, multimodal understanding,
 continual learning, edge response and memory repair. Each objective is decomposed
-into capability-specific stages, and the scheduler selects 7–9 distinct hosts
-instead of relying on a single pair. Select the task hub to inspect the objective,
-lead host, aggregate participant capacity and every host-to-subtask assignment.
-Animated multi-target lines show each stage fanning out to every participating
-worker.
+into capability-specific stages, and a shuffled coverage deck assigns between 1
+and 40 hosts to each plan. Select the task hub to inspect the objective, requesting
+ingress, random coverage size, lead host, allocated capacity and every host
+assignment.
+
+A task does not hold simultaneous connections to all planned workers. Each
+asynchronous batch contacts a random 1–20 hosts, shows a short animated
+communication window, and advances to the next batch after the calls finish.
+Small one-host plans bundle several stages on one machine; large plans spread
+stages across up to 40 shard workers.
+
+Each assignment has an independent service deadline calculated from allocated
+TFLOPS, stage complexity and deterministic jitter. Faster or better-funded hosts
+complete first and free a concurrency slot for another waiting host; slower hosts
+remain connected longer. This makes call overlap and release visibly uneven.
+
+The scheduler keeps up to three requests active at once, each initiated by a
+different ingress host. Green request pulses show host-to-task intent, while cyan
+pulses show the single asynchronous worker call currently in progress. A host may
+hold multiple task leases; its detail panel lists every concurrent assignment,
+allocation percentage and granted TFLOPS. Expanding the active task count
+recalculates shares, and an amber `N×` badge marks a host shared by multiple
+requests.
+
+## 7. Create a coordination task
+
+Task coordination is also implemented in the backend and persisted in SQLite:
+
+```bash
+curl http://127.0.0.1:8000/v1/tasks \
+  -H "Authorization: Bearer $NEURON_SHARED_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "objective": "Build a verified answer from distributed memory",
+    "target_hosts": 3,
+    "max_parallel": 2,
+    "requested_tflops": 500,
+    "stages": [
+      {"name": "Plan", "capability": "full-model"},
+      {"name": "Retrieve context", "capability": "cache"},
+      {"name": "Infer", "capability": "inference"},
+      {"name": "Verify", "capability": "checkpoint"}
+    ]
+  }'
+```
+
+Inspect it with `GET /v1/tasks/{task_id}`. The service keeps up to
+`max_parallel` calls active, recalculates host shares when another task starts,
+and assigns each call an independent duration. `execution_mode` is
+`coordination` until a real model-stage executor is connected.
 
