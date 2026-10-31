@@ -110,7 +110,7 @@ Architecture documents:
 - `status`/`drain` CLI commands and `/readyz`;
 - two-node Docker Compose, tests and GitHub Actions CI.
 - Obsidian-style live graph of hosts, virtual roles and node-to-node activity;
-- a deterministic 256-host join animation with a chaos-first cloud layout while
+- a configurable 1–2048 host join animation with a chaos-first cloud layout while
   retaining failure-domain metadata for a future grouped view;
 - task-driven asynchronous dispatch with random coverage from 1 to 40 hosts and
   visible per-host subtask assignment across failure domains;
@@ -164,6 +164,8 @@ The graph asks for the configured bearer token and keeps it in tab memory only. 
 `python scripts/graph_demo.py --open` for a populated two-node demonstration.
 Open <http://127.0.0.1:8000/graph?demo=fleet256> for a browser-generated 256-host
 fleet rehearsal. This visual simulation does not claim that 256 real nodes exist.
+Change `fleet256` to another supported size, such as `fleet50`, `fleet186` or
+`fleet543`; `demo=543` is also accepted. The supported range is 1–2048.
 The same browser-only demo is published at
 <https://yanxee.github.io/neuron-mesh/graph-demo.html?demo=fleet256>.
 Use the cache-safe URL

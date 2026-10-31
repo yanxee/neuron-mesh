@@ -29,7 +29,7 @@ The scheduler opens concurrency slots, contacts a bounded set of workers, closes
 
 | Surface | Purpose | Host data | Persistence |
 | --- | --- | --- | --- |
-| Browser fleet rehearsal, `?demo=fleet256` | Demonstrate 256 hosts, random 1–40 task coverage and 1–20 concurrent calls | Deterministic synthetic data in the browser | Never written to the node database |
+| Browser fleet rehearsal, `?demo=fleetN` | Demonstrate any 1–2048 host fleet, random 1–40 task coverage and 1–20 concurrent calls | Deterministic synthetic data in the browser | Never written to the node database |
 | Backend coordination API, `/v1/tasks` | Plan against admitted local and discovered peer nodes | Actual capability records | SQLite `tasks` and `task_assignments` |
 
 The visualization and backend share terminology, but synthetic rehearsal hosts are not claimed to be real machines.

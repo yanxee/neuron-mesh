@@ -24,8 +24,9 @@ def test_graph_dashboard_exposes_roles_relations_and_activity(tmp_path: Path) ->
         assert "/v1/observability/graph" in page.text
         assert "graphCanvas" in page.text
         assert "实时主机、角色与活动" in page.text
-        assert "fleet256" in page.text
-        assert "0 / 256" in page.text
+        assert "demoParameter" in page.text
+        assert "demoHostCount" in page.text
+        assert "2048" in page.text
         assert "buildFleetPlan" in page.text
         assert "redundancy_peer_ids" in page.text
         assert "taskTemplates" in page.text
