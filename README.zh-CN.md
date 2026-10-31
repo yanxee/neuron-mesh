@@ -19,7 +19,7 @@
 
 **Search terms / 搜索关键词：** decentralized AI · distributed inference · large language models · LLM network · peer-to-peer AI · federated learning · continual learning · persistent memory · long-term memory · heterogeneous computing · edge AI · multi-modal AI · OpenAI-compatible API · 去中心化大模型 · 分布式推理 · 联邦学习 · 长期记忆 · 异构算力
 
-![NeuronMesh 50 台虚拟主机、多主机任务扇出、Agent 角色与硬件资源关系图](docs/assets/fleet50-dashboard.png)
+![NeuronMesh 多入口申请、随机覆盖 1 至 40 台主机与异步任务调度关系图](docs/assets/fleet50-dashboard.png)
 
 ## 参与建设可度量的网络
 
@@ -73,7 +73,8 @@ NeuronMesh 关注的不是再包装一个聊天 API，而是探索大模型基�
 - 类似 Obsidian 的主机、虚拟角色与跨节点活动实时关系图；
 - 确定性的 50 台虚拟主机加入动画，可查看硬件、算力、能力、Agent 角色和
   跨故障域冗余备份；
-- 根据计算目标动态拆解任务，并展示一个任务向多台异构主机扇出算力请求；
+- 根据计算目标动态拆解任务，随机覆盖 1 至 40 台异构主机，并逐台异步分配算力；
+- 最多 3 个入口主机同时申请资源，显示比例算力份额、共享租约和自动再平衡；
 - 节点发现、远端算力和加密存储支持时，关系线会发光闪烁。
 
 ## 尚未实现
@@ -174,7 +175,10 @@ API 文档：<http://127.0.0.1:8000/docs>
 打开 <http://127.0.0.1:8000/graph?demo=fleet50> 可观看由浏览器生成的
 50 台虚拟主机加入、算力分配、Agent 角色和跨故障域冗余备份演练。该页面不会
 伪造真实在线节点或资源承诺。
-演示会在五类计算目标之间轮换，并为每次任务选择 7–9 台符合能力要求的主机。
+演示会在五类计算目标之间轮换，并为每次任务随机覆盖 1 至 40 台主机。任务
+每次只与当前阶段的一台主机通信，完成该调用窗口后再异步联系下一台主机。
+最多 3 个入口主机会同时发起资源申请；共享主机会显示它在各任务中的算力占比，
+过期请求会被替换并重新平衡资源。
 
 ## 运行与维护
 

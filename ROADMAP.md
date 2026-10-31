@@ -17,7 +17,7 @@ The roadmap is organized by architecture gates, not feature count. A gate is com
 - [x] safe drain, WAL checkpoint and signed shutdown receipt;
 - [x] OpenAI-compatible API, readiness and operations CLI;
 - [x] spatial-session mock interface and action permission broker;
-- [x] live host/role graph with activity pulses, a deterministic 50-host join rehearsal and task-driven one-to-many compute fan-out previews.
+- [x] live host/role graph with activity pulses, concurrent ingress requests and task-driven asynchronous previews covering random 1–40 host plans.
 
 This release is not a complete implementation of the architecture baseline.
 

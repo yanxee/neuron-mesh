@@ -89,9 +89,21 @@ nodes or pledged capacity.
 After the fleet is assembled, a cyan task hub appears. The demo cycles through
 five objectives such as long-context research, multimodal understanding,
 continual learning, edge response and memory repair. Each objective is decomposed
-into capability-specific stages, and the scheduler selects 7–9 distinct hosts
-instead of relying on a single pair. Select the task hub to inspect the objective,
-lead host, aggregate participant capacity and every host-to-subtask assignment.
-Animated multi-target lines show each stage fanning out to every participating
-worker.
+into capability-specific stages, and a shuffled coverage deck assigns between 1
+and 40 hosts to each plan. Select the task hub to inspect the objective, requesting
+ingress, random coverage size, lead host, allocated capacity and every host
+assignment.
+
+A task does not hold simultaneous connections to all planned workers. Each stage
+dispatches to one host, shows a short animated communication window, and advances
+to the next host after the call finishes. Small one-host plans bundle several
+stages on one machine; large plans spread stages across up to 40 shard workers.
+
+The scheduler keeps up to three requests active at once, each initiated by a
+different ingress host. Green request pulses show host-to-task intent, while cyan
+pulses show the single asynchronous worker call currently in progress. A host may
+hold multiple task leases; its detail panel lists every concurrent assignment,
+allocation percentage and granted TFLOPS. Expanding the active task count
+recalculates shares, and an amber `N×` badge marks a host shared by multiple
+requests.
 
