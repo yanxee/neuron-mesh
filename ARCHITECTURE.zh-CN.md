@@ -665,7 +665,7 @@ flowchart LR
 | 身份 | Ed25519 节点密钥与签名能力 | 成员证书、轮换、撤销和 Worker 证明 |
 | 准入 | 共享 Bearer Token | 域邀请、租户用户、命名空间策略和短期授权 |
 | 发现 | 周期 HTTP peer 列表交换 | 分层目录、libp2p/DHT、有界 TTL 和分区测试 |
-| 调度 | 偏好 RTT 的完整模型选择 | 兼容图、多目标计划、租约、fencing 和准入控制 |
+| 调度 | 持久化协调任务、能力感知主机选择、1–20 个异步槽位和独立服务截止时间 | 签名租约、fencing、兼容图、多目标放置和准入控制 |
 | 推理 | Echo/本地 OpenAI 兼容完整模型 | 真实 Worker 适配器、原生流语义和一致性 |
 | 管线 | 未实现 | 阶段清单、激活协议、截止时间和恢复 |
 | 记忆 | 本地 AES-GCM、词法盲索引、远端密文副本 | 密钥层级/恢复、不可变版本、反熵、清洗和命名空间授权 |
@@ -774,11 +774,12 @@ API、存储、信任、调度或训练变更必须包含：
 1. [架构基线](ARCHITECTURE.zh-CN.md)
 2. [状态与故障模型](docs/architecture/STATE_AND_FAILURE.zh-CN.md)
 3. [接口契约](docs/architecture/INTERFACE_CONTRACTS.zh-CN.md)
-4. [威胁模型](docs/architecture/THREAT_MODEL.zh-CN.md)
-5. [质量场景](docs/architecture/QUALITY_SCENARIOS.zh-CN.md)
-6. [研究型架构方案](神经元式去中心化大模型网络系统-研究型邀请制可执行方案.md)
-7. [持久记忆与持续学习](神经元式去中心化大模型网络系统-持续学习与持久记忆方案.md)
-8. [空间适配边界](神经元式去中心化大模型网络系统-元宇宙接入预留方案.md)
+4. [任务协调调度实现原理](docs/TASK_ORCHESTRATION.zh-CN.md)
+5. [威胁模型](docs/architecture/THREAT_MODEL.zh-CN.md)
+6. [质量场景](docs/architecture/QUALITY_SCENARIOS.zh-CN.md)
+7. [研究型架构方案](神经元式去中心化大模型网络系统-研究型邀请制可执行方案.md)
+8. [持久记忆与持续学习](神经元式去中心化大模型网络系统-持续学习与持久记忆方案.md)
+9. [空间适配边界](神经元式去中心化大模型网络系统-元宇宙接入预留方案.md)
 
 ## 附录 A：外部技术依据
 

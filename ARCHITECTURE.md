@@ -681,7 +681,7 @@ The interface inventory is in [INTERFACE_CONTRACTS.md](docs/architecture/INTERFA
 | Identity | Ed25519 node key and signed capabilities | Membership certificates, rotation, revocation and worker attestation |
 | Admission | Shared bearer token | Domain invitations, tenant users, namespace policy and short-lived grants |
 | Discovery | Periodic full HTTP peer-list exchange | Hierarchical catalogs, libp2p/DHT, bounded TTL and partition tests |
-| Scheduling | RTT-biased whole-model peer choice | Compatibility graph, multi-objective plan, leases, fencing and admission control |
+| Scheduling | Persisted coordination tasks, capability-aware host selection, 1–20 asynchronous slots and independent service deadlines | Signed leases, fencing, compatibility graph, multi-objective placement and admission control |
 | Inference | Echo/local OpenAI-compatible whole model | Real worker adapters, native streaming semantics and whole-model conformance |
 | Pipeline | Not implemented | Stage manifests, activation protocol, deadlines and failure recovery |
 | Memory | Local AES-GCM, lexical blind index, remote ciphertext copies | Key hierarchy/recovery, immutable versions, anti-entropy, scrub and namespace auth |
@@ -792,11 +792,12 @@ The project should prefer a smaller verified contract over a larger unverified f
 1. [Architecture baseline](ARCHITECTURE.md)
 2. [State and failure model](docs/architecture/STATE_AND_FAILURE.md)
 3. [Interface contracts](docs/architecture/INTERFACE_CONTRACTS.md)
-4. [Threat model](docs/architecture/THREAT_MODEL.md)
-5. [Quality scenarios](docs/architecture/QUALITY_SCENARIOS.md)
-6. [Research architecture proposal](神经元式去中心化大模型网络系统-研究型邀请制可执行方案.md)
-7. [Persistent memory and continual learning](神经元式去中心化大模型网络系统-持续学习与持久记忆方案.md)
-8. [Spatial adapter boundary](神经元式去中心化大模型网络系统-元宇宙接入预留方案.md)
+4. [Coordination task scheduling](docs/TASK_ORCHESTRATION.md)
+5. [Threat model](docs/architecture/THREAT_MODEL.md)
+6. [Quality scenarios](docs/architecture/QUALITY_SCENARIOS.md)
+7. [Research architecture proposal](神经元式去中心化大模型网络系统-研究型邀请制可执行方案.md)
+8. [Persistent memory and continual learning](神经元式去中心化大模型网络系统-持续学习与持久记忆方案.md)
+9. [Spatial adapter boundary](神经元式去中心化大模型网络系统-元宇宙接入预留方案.md)
 
 ## Appendix A: External technical basis
 
