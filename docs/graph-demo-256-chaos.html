@@ -2404,9 +2404,17 @@
         const repulsion = veryDense ? 900 : dense ? 2850 : 6200;
         const forceNodes = nodes.filter((node) => node.kind !== "role");
         for (const node of nodes) {
-          const anchorX = node.home_x ?? centerX;
-          const anchorY = node.home_y ?? centerY;
-          const anchorStrength = veryDense ? 0.00075 : dense ? 0.00042 : 0.00022;
+          const anchorX = demoMode && node.home_x == null ? node.x : node.home_x ?? centerX;
+          const anchorY = demoMode && node.home_y == null ? node.y : node.home_y ?? centerY;
+          const anchorStrength = demoMode
+            ? node.kind === "host"
+              ? 0.006
+              : 0
+            : veryDense
+              ? 0.00075
+              : dense
+                ? 0.00042
+                : 0.00022;
           node.fx = (anchorX - node.x) * anchorStrength;
           node.fy = (anchorY - node.y) * anchorStrength;
         }
@@ -2424,22 +2432,25 @@
           b.fx += fx;
           b.fy += fy;
         };
-        if (forceNodes.length <= 420) {
-          for (let i = 0; i < forceNodes.length; i += 1) {
-            for (let j = i + 1; j < forceNodes.length; j += 1) {
-              applyPairForce(forceNodes[i], forceNodes[j]);
+        if (!demoMode) {
+          if (forceNodes.length <= 420) {
+            for (let i = 0; i < forceNodes.length; i += 1) {
+              for (let j = i + 1; j < forceNodes.length; j += 1) {
+                applyPairForce(forceNodes[i], forceNodes[j]);
+              }
             }
-          }
-        } else {
-          const sampleCount = Math.min(32, forceNodes.length - 1);
-          for (let i = 0; i < forceNodes.length; i += 1) {
-            for (let sample = 1; sample <= sampleCount; sample += 1) {
-              const j = (i + sample * 37) % forceNodes.length;
-              if (j !== i) applyPairForce(forceNodes[i], forceNodes[j]);
+          } else {
+            const sampleCount = Math.min(32, forceNodes.length - 1);
+            for (let i = 0; i < forceNodes.length; i += 1) {
+              for (let sample = 1; sample <= sampleCount; sample += 1) {
+                const j = (i + sample * 37) % forceNodes.length;
+                if (j !== i) applyPairForce(forceNodes[i], forceNodes[j]);
+              }
             }
           }
         }
         for (const edge of edges) {
+          if (demoMode) break;
           if (edge.kind === "task" || edge.kind === "request" || edge.kind === "hosts") {
             continue;
           }
