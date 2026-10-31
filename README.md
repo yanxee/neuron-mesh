@@ -110,8 +110,8 @@ Architecture documents:
 - `status`/`drain` CLI commands and `/readyz`;
 - two-node Docker Compose, tests and GitHub Actions CI.
 - Obsidian-style live graph of hosts, virtual roles and node-to-node activity;
-- a deterministic 256-host join animation with hardware, compute, capabilities,
-  Agent roles and cross-failure-domain redundancy previews;
+- a deterministic 256-host join animation with a chaos-first cloud layout while
+  retaining failure-domain metadata for a future grouped view;
 - task-driven asynchronous dispatch with random coverage from 1 to 40 hosts and
   visible per-host subtask assignment across failure domains;
 - up to three simultaneous ingress-host resource requests with proportional

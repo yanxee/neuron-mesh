@@ -17,6 +17,8 @@
   `/v1/tasks` create/list/detail APIs.
 - Add shuffled 1–40 host coverage plans with bundled low-resource stages and
   sharded high-coverage stages.
+- Replace the regular 256-node radial layout with a chaos-first host cloud,
+  independent off-screen entry vectors and zoom-dependent label sampling.
 - Add random 1–20-host concurrency windows with independent per-host service
   duration, staggered completion and just-in-time slot refill.
 
