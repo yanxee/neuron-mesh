@@ -19,6 +19,8 @@
 
 **Search terms / 搜索关键词：** decentralized AI · distributed inference · large language models · LLM network · peer-to-peer AI · federated learning · continual learning · persistent memory · long-term memory · heterogeneous computing · edge AI · multi-modal AI · OpenAI-compatible API · 去中心化大模型 · 分布式推理 · 联邦学习 · 长期记忆 · 异构算力
 
+![NeuronMesh 实时主机与角色关系图](docs/assets/graph-dashboard.png)
+
 ## 参与建设可度量的网络
 
 NeuronMesh 正在寻找研究者、工程师、节点运维者、翻译贡献者和协议评审者，共同把去中心化 AI 从愿景变成可度量系统。做出有价值的首次贡献，**不需要 GPU，也不需要完整部署模型**。
@@ -68,6 +70,8 @@ NeuronMesh 关注的不是再包装一个聊天 API，而是探索大模型基�
 - 主动排空、WAL checkpoint 和区分本地/远端持久性的签名关机回执；
 - `status`/`drain` 运维命令和 `/readyz` 就绪探测；
 - 双节点 Docker Compose、本地测试和 GitHub Actions CI。
+- 类似 Obsidian 的主机、虚拟角色与跨节点活动实时关系图；
+- 节点发现、远端算力和加密存储支持时，关系线会发光闪烁。
 
 ## 尚未实现
 
@@ -159,6 +163,11 @@ neuron-mesh serve --host 127.0.0.1 --port 8000
 ```
 
 API 文档：<http://127.0.0.1:8000/docs>
+
+实时关系图：<http://127.0.0.1:8000/graph>
+
+关系图会要求输入配置的 Bearer Token，并仅在当前标签页内存中保存。可运行
+`python scripts/graph_demo.py --open` 启动带主机、角色和活动的双节点演示。
 
 ## 运行与维护
 

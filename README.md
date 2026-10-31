@@ -21,6 +21,8 @@
 
 **Search terms:** decentralized AI · distributed inference · large language models · LLM network · peer-to-peer AI · federated learning · continual learning · persistent memory · long-term memory · heterogeneous computing · edge AI · multi-modal AI · OpenAI-compatible API · 去中心化大模型 · 分布式推理 · 联邦学习 · 长期记忆 · 异构算力
 
+![NeuronMesh live host and role graph](docs/assets/graph-dashboard.png)
+
 ## Help build the measurable network
 
 NeuronMesh is looking for researchers, engineers, node operators, translators and protocol reviewers who want to make decentralized AI measurable rather than aspirational. You do **not** need a GPU or a complete model deployment for a useful first contribution.
@@ -107,6 +109,8 @@ Architecture documents:
 - safe drain, WAL checkpoint and signed shutdown receipts that distinguish local and remote durability;
 - `status`/`drain` CLI commands and `/readyz`;
 - two-node Docker Compose, tests and GitHub Actions CI.
+- Obsidian-style live graph of hosts, virtual roles and node-to-node activity;
+- animated relation lines for discovery, remote compute and encrypted-storage support.
 
 ## Not implemented yet
 
@@ -145,6 +149,11 @@ neuron-mesh serve --host 127.0.0.1 --port 8000
 ```
 
 API documentation: <http://127.0.0.1:8000/docs>
+
+Live relationship graph: <http://127.0.0.1:8000/graph>
+
+The graph asks for the configured bearer token and keeps it in tab memory only. Start
+`python scripts/graph_demo.py --open` for a populated two-node demonstration.
 
 ## Operations
 
