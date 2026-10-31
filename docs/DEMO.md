@@ -59,3 +59,16 @@ Open <http://127.0.0.1:8000/docs> and demonstrate:
 4. `/v1/chat/completions`
 5. `/v1/node/drain`
 
+## 5. Open the live graph
+
+Run the populated graph demo:
+
+```bash
+python scripts/graph_demo.py --open
+```
+
+Open <http://127.0.0.1:18082/graph> and enter the printed token. Drag to pan,
+scroll to zoom and select a node to inspect it. Peer announcements, remote
+compute and encrypted-storage support animate the corresponding relationship
+line for a short time.
+

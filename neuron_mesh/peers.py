@@ -246,13 +246,34 @@ class PeerMesh:
         return response.json()
 
     async def get_json(
-        self, endpoint: str, path: str
+        self, endpoint: str, path: str, *, timeout: float | None = None
     ) -> dict[str, object]:
         response = await self._client.get(
-            f"{endpoint.rstrip('/')}{path}", headers=self.auth_headers
+            f"{endpoint.rstrip('/')}{path}",
+            headers=self.auth_headers,
+            timeout=timeout if timeout is not None else httpx.USE_CLIENT_DEFAULT,
         )
         response.raise_for_status()
-        return response.json()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise ValueError("peer response is not a JSON object")
+        return payload
+
+    async def get_list(
+        self, endpoint: str, path: str, *, timeout: float | None = None
+    ) -> list[dict[str, object]]:
+        response = await self._client.get(
+            f"{endpoint.rstrip('/')}{path}",
+            headers=self.auth_headers,
+            timeout=timeout if timeout is not None else httpx.USE_CLIENT_DEFAULT,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, list) or not all(
+            isinstance(item, dict) for item in payload
+        ):
+            raise ValueError("peer response is not a JSON object list")
+        return payload
 
     async def forward_chat(
         self, endpoint: str, payload: dict[str, object]
@@ -264,6 +285,7 @@ class PeerMesh:
                 **self.auth_headers,
                 "X-Neuron-Forwarded": "1",
                 "X-Neuron-Route": "local",
+                "X-Neuron-Source-Node": self.identity.node_id,
             },
         )
         response.raise_for_status()

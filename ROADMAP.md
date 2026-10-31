@@ -17,6 +17,7 @@ The roadmap is organized by architecture gates, not feature count. A gate is com
 - [x] safe drain, WAL checkpoint and signed shutdown receipt;
 - [x] OpenAI-compatible API, readiness and operations CLI;
 - [x] spatial-session mock interface and action permission broker;
+- [x] live host/role graph with activity-driven relation pulses.
 
 This release is not a complete implementation of the architecture baseline.
 
