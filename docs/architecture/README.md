@@ -8,6 +8,7 @@ NeuronMesh is a long-running systems research programme. This directory holds th
 
 - [System architecture](../../ARCHITECTURE.md): target planes, components, state ownership, gates and implementation gap.
 - [State and failure model](STATE_AND_FAILURE.md): request, lease, memory and role state machines plus failure tests.
+- [Coordination task scheduling](../TASK_ORCHESTRATION.md): implemented planner, asynchronous worker slots and service-deadline logic.
 - [Interface contracts](INTERFACE_CONTRACTS.md): versioned objects shared between nodes and services.
 - [Threat model](THREAT_MODEL.md): trust boundaries, threat register, controls and residual risk.
 - [Decision log](DECISIONS.md): architecture decisions already taken and their reversal cost.

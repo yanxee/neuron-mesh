@@ -302,6 +302,36 @@ declared_metrics
 
 自报指标是声明，不是评估结果。
 
+### 3.15 `CoordinationTask/v1`
+
+参考实现把该对象持久化到 SQLite，并通过 `/v1/tasks` 暴露。其
+`execution_mode` 明确标记为 `coordination`，因为当前契约尚不包含真实模型阶段执行。
+
+```text
+task_id
+objective
+requester_host_id
+target_hosts: 1..40
+participant_count
+max_parallel: 1..20
+requested_tflops / granted_tflops
+execution_mode: coordination
+status: pending | running | complete | failed
+created_at / service_start_at / completed_at
+assignments[]:
+  assignment_id / sequence
+  stage_name / stage_weight / capability
+  host_id / host_name
+  status: pending | active | done | failed
+  share_percent / allocated_tflops
+  service_seconds / started_at / ends_at / completed_at
+```
+
+分配项是按能力寻址的 Worker 槽位。任务可以覆盖多台主机，但同一时刻活动的
+分配项不会超过 `max_parallel`。每个活动分配项拥有独立截止时间；完成后释放
+一个槽位，并允许一个 pending 分配项补位。关系图不绘制永久的任务到 Worker
+连线，只为每次入口请求或 Worker 调用绘制短时活动脉冲。
+
 ## 4. 传输映射
 
 ### 4.1 阶段 1：可信 HTTP/TLS 参考路径

@@ -8,6 +8,7 @@ NeuronMesh 是长期系统研究项目。本目录保存一个功能成为平台
 
 - [系统架构](../../ARCHITECTURE.zh-CN.md)：目标平面、组件、状态所有权、门槛与实现差距。
 - [状态与故障模型](STATE_AND_FAILURE.zh-CN.md)：请求、租约、记忆和角色状态机及故障测试。
+- [任务协调调度](../TASK_ORCHESTRATION.zh-CN.md)：已实现的规划器、异步 Worker 槽位和服务截止时间逻辑。
 - [接口契约](INTERFACE_CONTRACTS.zh-CN.md)：节点和服务共享的版本化对象。
 - [威胁模型](THREAT_MODEL.zh-CN.md)：信任边界、威胁登记、控制和残余风险。
 - [决策日志](DECISIONS.zh-CN.md)：已采用的架构决定及反转成本。
