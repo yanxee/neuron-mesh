@@ -19,7 +19,7 @@
 
 **Search terms / 搜索关键词：** decentralized AI · distributed inference · large language models · LLM network · peer-to-peer AI · federated learning · continual learning · persistent memory · long-term memory · heterogeneous computing · edge AI · multi-modal AI · OpenAI-compatible API · 去中心化大模型 · 分布式推理 · 联邦学习 · 长期记忆 · 异构算力
 
-![NeuronMesh 多入口申请、随机主机覆盖、1 至 20 台并发调用及主机独立服务时长关系图](docs/assets/fleet50-dashboard.png)
+![NeuronMesh 256 节点、多入口申请、随机主机覆盖和独立服务时长关系图](docs/assets/fleet256-dashboard.png)
 
 ## 参与建设可度量的网络
 
@@ -71,10 +71,12 @@ NeuronMesh 关注的不是再包装一个聊天 API，而是探索大模型基�
 - `status`/`drain` 运维命令和 `/readyz` 就绪探测；
 - 双节点 Docker Compose、本地测试和 GitHub Actions CI。
 - 类似 Obsidian 的主机、虚拟角色与跨节点活动实时关系图；
-- 确定性的 50 台虚拟主机加入动画，可查看硬件、算力、能力、Agent 角色和
+- 确定性的 256 台虚拟主机加入动画，可查看硬件、算力、能力、Agent 角色和
   跨故障域冗余备份；
 - 根据计算目标动态拆解任务，随机覆盖 1 至 40 台异构主机，并按批次异步分配算力；
 - 最多 3 个入口主机同时申请资源，显示比例算力份额、共享租约和自动再平衡；
+- SQLite 持久化协调调度器与 `/v1/tasks` 接口，支持能力感知的主机选择、
+  1–20 个异步调用槽位和独立服务截止时间；
 - 节点发现、远端算力和加密存储支持时，关系线会发光闪烁。
 
 ## 尚未实现
@@ -172,15 +174,20 @@ API 文档：<http://127.0.0.1:8000/docs>
 
 关系图会要求输入配置的 Bearer Token，并仅在当前标签页内存中保存。可运行
 `python scripts/graph_demo.py --open` 启动带主机、角色和活动的双节点演示。
-打开 <http://127.0.0.1:8000/graph?demo=fleet50> 可观看由浏览器生成的
-50 台虚拟主机加入、算力分配、Agent 角色和跨故障域冗余备份演练。该页面不会
+打开 <http://127.0.0.1:8000/graph?demo=fleet256> 可观看由浏览器生成的
+256 台虚拟主机加入、算力分配、Agent 角色和跨故障域冗余备份演练。该页面不会
 伪造真实在线节点或资源承诺。
+同一套浏览器演示已发布到
+<https://yanxee.github.io/neuron-mesh/graph-demo.html?demo=fleet256>。
 演示会在五类计算目标之间轮换，并为每次任务随机覆盖 1 至 40 台主机。任务
 每次会同时联系随机 1–20 台当前批次主机。每台主机的服务时长根据主机算力、
 获批份额和阶段负载独立计算，因此慢速或低份额主机会保持更久，快速主机会更早
 释放并发热点并触发后续主机接入。
 最多 3 个入口主机会同时发起资源申请；共享主机会显示它在各任务中的算力占比，
 过期请求会被替换并重新平衡资源。
+
+真实任务协调可通过 `POST /v1/tasks` 创建，状态会持久化并显示在需要认证的
+`/graph` 页面。当前参考实现只调度协调窗口，不代表已经执行真实模型分片。
 
 ## 运行与维护
 
@@ -321,6 +328,7 @@ neuron-mesh serve --port 8000
 - [文档语言规则](docs/I18N.zh-CN.md)
 - [研究资料库](docs/research/README.zh-CN.md)
 - [完整系统架构基线](ARCHITECTURE.zh-CN.md)
+- [任务协调调度实现原理](docs/TASK_ORCHESTRATION.zh-CN.md)
 - [英文研究型邀请制方案](docs/research/invite-only-executable-plan.en.md)
 - [英文持续学习与持久记忆方案](docs/research/continual-learning-persistent-memory.en.md)
 - [英文元宇宙接入方案](docs/research/metaverse-integration.en.md)

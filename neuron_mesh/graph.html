@@ -419,7 +419,7 @@
         <div class="demo-progress" id="demoProgress" hidden aria-live="polite">
           <div class="demo-progress-row">
             <span id="demoProgressLabel" data-i18n="joiningHosts">Joining virtual hosts</span>
-            <strong id="demoProgressCount">0 / 50</strong>
+            <strong id="demoProgressCount">0 / 256</strong>
           </div>
           <div class="demo-progress-track">
             <div class="demo-progress-fill" id="demoProgressFill"></div>
@@ -680,8 +680,10 @@
         task: "#69e4ff",
       };
       const params = new URLSearchParams(window.location.search);
-      const demoMode = ["fleet50", "50"].includes((params.get("demo") || "").toLowerCase());
-      const DEMO_HOST_COUNT = 50;
+      const demoMode = ["fleet256", "256", "fleet50", "50"].includes(
+        (params.get("demo") || "").toLowerCase(),
+      );
+      const DEMO_HOST_COUNT = 256;
 
       let language = (navigator.language || "en").toLowerCase().startsWith("zh") ? "zh" : "en";
       let token = "";
@@ -710,6 +712,7 @@
       let nextTaskSequence = 0;
       let nextTaskTemplate = 0;
       let taskPhaseStarted = false;
+      let nodeLookup = new Map();
       let coverageDeck = [];
       let coverageCursor = 0;
       let coverageRandomState = 0x9e3779b9;
@@ -779,22 +782,34 @@
       }
 
       function radiusForNode(node) {
-        if (node.kind === "role") return node.is_local ? 5.5 : 5;
-        if (node.kind === "task") return 15;
-        if (node.is_local) return 16;
-        if (node.capacity_tier === "strong") return 11.5;
-        if (node.capacity_tier === "balanced") return 9.5;
-        return 7.5;
+        if (node.kind === "role") return demoMode ? 4 : node.is_local ? 5.5 : 5;
+        if (node.kind === "task") return demoMode ? 12 : 15;
+        if (node.is_local) return demoMode ? 12 : 16;
+        if (node.capacity_tier === "strong") return demoMode ? 8 : 11.5;
+        if (node.capacity_tier === "balanced") return demoMode ? 6.5 : 9.5;
+        return demoMode ? 5.5 : 7.5;
       }
 
       function buildFleetPlan() {
         const regions = [
           ["APAC-SG", "Singapore / 新加坡", "fd-apac-a"],
           ["APAC-TK", "Tokyo / 东京", "fd-apac-b"],
+          ["APAC-SY", "Sydney / 悉尼", "fd-apac-c"],
+          ["APAC-MB", "Mumbai / 孟买", "fd-apac-d"],
           ["EMEA-LD", "London / 伦敦", "fd-emea-a"],
+          ["EMEA-FR", "Frankfurt / 法兰克福", "fd-emea-b"],
+          ["EMEA-ST", "Stockholm / 斯德哥尔摩", "fd-emea-c"],
+          ["EMEA-DB", "Dubai / 迪拜", "fd-emea-d"],
           ["AMER-VA", "Virginia / 弗吉尼亚", "fd-amer-a"],
+          ["AMER-OR", "Oregon / 俄勒冈", "fd-amer-b"],
+          ["AMER-SP", "São Paulo / 圣保罗", "fd-amer-c"],
+          ["AMER-CA", "Toronto / 多伦多", "fd-amer-d"],
           ["EDGE-GL", "Edge network / 全球边缘", "fd-edge-global"],
+          ["EDGE-AR", "Arctic edge / 北极边缘", "fd-edge-arctic"],
+          ["EDGE-OC", "Ocean edge / 海洋边缘", "fd-edge-ocean"],
+          ["EDGE-OR", "Orbital edge / 轨道边缘", "fd-edge-orbital"],
         ];
+        const hostsPerRegion = DEMO_HOST_COUNT / regions.length;
         const roots = [
           "atlas", "aurora", "boreal", "cedar", "delta",
           "ember", "fjord", "helios", "iris", "juniper",
@@ -1135,13 +1150,13 @@
         const roles = [];
         const edges = [];
         for (let i = 0; i < DEMO_HOST_COUNT; i += 1) {
-          const regionIndex = Math.floor(i / 10);
-          const regionalIndex = i % 10;
+          const regionIndex = Math.floor(i / hostsPerRegion);
+          const regionalIndex = i % hostsPerRegion;
           const [regionCode, regionLabel, failureDomain] = regions[regionIndex];
-          const deviceClass = deviceCycle[regionalIndex];
+          const deviceClass = deviceCycle[regionalIndex % deviceCycle.length];
           const profile = deviceProfiles[deviceClass];
           const variant = i % profile.cpuCores.length;
-          const label = `${roots[i]}-${profile.code}-${String(i + 1).padStart(2, "0")}`;
+          const label = `${roots[i % roots.length]}-${profile.code}-${String(i + 1).padStart(3, "0")}`;
           const hostId = `node:demo-${i + 1}`;
           const roleId = `role:demo-agent-${i + 1}`;
           const [agentSlug, agentLabel, agentModel, agentTask] = agents[i % agents.length];
@@ -1158,6 +1173,7 @@
           const host = {
             id: hostId,
             node_id: `demo-${i + 1}`,
+            host_index: i,
             kind: "host",
             label,
             is_local: i === 0,
@@ -1205,10 +1221,12 @@
 
         const backupMap = new Map();
         for (let i = 0; i < hosts.length; i += 1) {
-          const domainIndex = Math.floor(i / 10);
-          for (const domainOffset of [1, 2]) {
+          const domainIndex = Math.floor(i / hostsPerRegion);
+          for (const domainOffset of [1, 5]) {
             const peerDomain = (domainIndex + domainOffset) % regions.length;
-            const peerIndex = peerDomain * 10 + ((i * 7 + domainOffset * 3) % 10);
+            const peerIndex =
+              peerDomain * hostsPerRegion +
+              ((i * 7 + domainOffset * 3) % hostsPerRegion);
             const peer = hosts[peerIndex];
             hosts[i].redundancy_peer_ids.push(peer.id);
             const pair = [hosts[i].id, peer.id].sort();
@@ -1223,8 +1241,8 @@
         }
         edges.push(...backupMap.values());
 
-        for (let start = 0; start < hosts.length; start += 10) {
-          for (let offset = 0; offset < 9; offset += 1) {
+        for (let start = 0; start < hosts.length; start += hostsPerRegion) {
+          for (let offset = 0; offset < hostsPerRegion - 1; offset += 1) {
             edges.push({
               id: `peer:${hosts[start + offset].id}:${hosts[start + offset + 1].id}`,
               source: hosts[start + offset].id,
@@ -1319,7 +1337,9 @@
         const hostNodes = nodes.filter((node) => node.kind === "host");
         const roleNodes = nodes.filter((node) => node.kind === "role");
         const taskNodes = nodes.filter(
-          (node) => node.kind === "task" && node.status === "running",
+          (node) =>
+            node.kind === "task" &&
+            (node.status === "pending" || node.status === "running"),
         );
         const now = Date.now() / 1000 + clockOffset;
         const recent = activities.filter((event) => now - event.occurred_at < 30).length;
@@ -1379,7 +1399,11 @@
 
       function activeDemoTasks() {
         return nodes
-          .filter((node) => node.kind === "task" && node.status === "running")
+          .filter(
+            (node) =>
+              node.kind === "task" &&
+              (node.status === "pending" || node.status === "running"),
+          )
           .sort((a, b) => a.started_at - b.started_at);
       }
 
@@ -1889,10 +1913,10 @@
         setStatus("live", t("syntheticMode"));
         const generation = demoGeneration;
         demoTimers.push(
-          window.setTimeout(() => joinDemoHost(0, generation), 420),
+          window.setTimeout(() => joinDemoHost(0, generation), 320),
         );
         for (let index = 1; index < DEMO_HOST_COUNT; index += 1) {
-          const delay = 600 + index * 165 + (index % 4) * 24;
+          const delay = 390 + index * 48 + (index % 6) * 6;
           demoTimers.push(
             window.setTimeout(() => joinDemoHost(index, generation), delay),
           );
@@ -1909,12 +1933,20 @@
           const previous = existing.get(node.id);
           const angle = (index / Math.max(nextNodes.length, 1)) * Math.PI * 2;
           const radius = node.kind === "role" ? 220 : 280;
+          const x = previous?.x ?? width / 2 + Math.cos(angle) * radius;
+          const y = previous?.y ?? height / 2 + Math.sin(angle) * radius;
           return {
             ...node,
-            x: previous?.x ?? width / 2 + Math.cos(angle) * radius,
-            y: previous?.y ?? height / 2 + Math.sin(angle) * radius,
+            x,
+            y,
             vx: previous?.vx ?? 0,
             vy: previous?.vy ?? 0,
+            pinned_x: node.kind === "task"
+              ? previous?.pinned_x ?? x
+              : node.pinned_x,
+            pinned_y: node.kind === "task"
+              ? previous?.pinned_y ?? y
+              : node.pinned_y,
             radius: radiusForNode({ ...node, is_local: node.id === local?.id }),
           };
         });
@@ -1976,7 +2008,7 @@
       });
 
       function nodeById(id) {
-        return nodes.find((node) => node.id === id);
+        return nodeLookup.get(id) || nodes.find((node) => node.id === id);
       }
 
       function graphPoint(event) {
@@ -2314,20 +2346,18 @@
         const centerX = (canvas.clientWidth || 800) / 2;
         const centerY = (canvas.clientHeight || 600) / 2;
         const dense = nodes.length > 45;
-        const repulsion = dense ? 2850 : 6200;
+        const veryDense = nodes.length > 220;
+        const repulsion = veryDense ? 900 : dense ? 2850 : 6200;
+        const forceNodes = nodes.filter((node) => node.kind !== "role");
         for (const node of nodes) {
-          node.fx = (centerX - node.x) * (dense ? 0.00024 : 0.00018);
-          node.fy = (centerY - node.y) * (dense ? 0.00024 : 0.00018);
+          node.fx = (centerX - node.x) * (veryDense ? 0.00038 : dense ? 0.00024 : 0.00018);
+          node.fy = (centerY - node.y) * (veryDense ? 0.00038 : dense ? 0.00024 : 0.00018);
         }
-        for (let i = 0; i < nodes.length; i += 1) {
-          for (let j = i + 1; j < nodes.length; j += 1) {
-            const a = nodes[i];
-            const b = nodes[j];
+        for (let i = 0; i < forceNodes.length; i += 1) {
+          for (let j = i + 1; j < forceNodes.length; j += 1) {
+            const a = forceNodes[i];
+            const b = forceNodes[j];
             if (a.kind === "task" || b.kind === "task") continue;
-            const hostedPair =
-              (a.kind === "role" && a.hosts?.includes(b.id)) ||
-              (b.kind === "role" && b.hosts?.includes(a.id));
-            if (hostedPair) continue;
             const dx = b.x - a.x || 0.01;
             const dy = b.y - a.y || 0.01;
             const distance2 = Math.max(dx * dx + dy * dy, 100);
@@ -2342,7 +2372,9 @@
           }
         }
         for (const edge of edges) {
-          if (edge.kind === "task" || edge.kind === "request") continue;
+          if (edge.kind === "task" || edge.kind === "request" || edge.kind === "hosts") {
+            continue;
+          }
           const a = nodeById(edge.source);
           const b = nodeById(edge.target);
           if (!a || !b) continue;
@@ -2649,9 +2681,17 @@
         ctx.textBaseline = "top";
         ctx.fillStyle = selected ? "#ffffff" : "rgba(225,240,255,0.8)";
         const roleLabelHidden = node.kind === "role" && !selected && nodes.length > 18;
-        if (!roleLabelHidden) {
+        const hostLabelStep = scale >= 1.3 ? 1 : scale >= 0.8 ? 3 : 8;
+        const hostLabelHidden =
+          node.kind === "host" &&
+          demoMode &&
+          DEMO_HOST_COUNT > 120 &&
+          !selected &&
+          node.host_index % hostLabelStep !== 0;
+        if (!roleLabelHidden && !hostLabelHidden) {
           const fontScale = Math.max(scale, node.kind === "role" ? 0.78 : 0.68);
-          ctx.font = `${(node.kind === "role" ? 10 : node.kind === "task" ? 11 : 11.5) / fontScale}px Inter, "Microsoft YaHei", sans-serif`;
+          const fontSize = node.kind === "role" ? 9 : node.kind === "task" ? 10.5 : 11;
+          ctx.font = `${fontSize / fontScale}px Inter, "Microsoft YaHei", sans-serif`;
           const label = node.label.length > 30 ? `${node.label.slice(0, 29)}…` : node.label;
           ctx.fillText(label, node.x, node.y + radius + 7);
         }
@@ -2684,6 +2724,7 @@
         const width = canvas.clientWidth || 800;
         const height = canvas.clientHeight || 600;
         ctx.clearRect(0, 0, width, height);
+        nodeLookup = new Map(nodes.map((node) => [node.id, node]));
         ctx.save();
         ctx.translate(panX, panY);
         ctx.scale(scale, scale);

@@ -7,12 +7,14 @@
 - Add the target system architecture, state-ownership and failure contracts, versioned interface inventory, threat model, quality scenarios and architecture-gated roadmap.
 - Publish English and Simplified Chinese editions of public documentation, website pages, GitHub forms and research material.
 - Add an Obsidian-style live graph for hosts, virtual roles and short-lived cross-node activity.
-- Add a deterministic 50-host fleet-join visualization with hardware, compute,
+- Add a deterministic 256-host fleet-join visualization with hardware, compute,
   capability, Agent-role and cross-failure-domain redundancy details.
 - Add task-driven asynchronous scheduling with decomposable objectives and
   random 1–20-host communication batches across heterogeneous hosts.
 - Add concurrent ingress requests, shared host leases, proportional allocation
   views and automatic task replacement.
+- Add a SQLite-backed coordination task scheduler and authenticated
+  `/v1/tasks` create/list/detail APIs.
 - Add shuffled 1–40 host coverage plans with bundled low-resource stages and
   sharded high-coverage stages.
 - Add random 1–20-host concurrency windows with independent per-host service

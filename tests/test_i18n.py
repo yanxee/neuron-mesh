@@ -20,6 +20,7 @@ PAIRED_MARKDOWN = [
     ("docs/I18N.md", "docs/I18N.zh-CN.md"),
     ("docs/JOIN.md", "docs/JOIN.zh-CN.md"),
     ("docs/OUTREACH.md", "docs/OUTREACH.zh-CN.md"),
+    ("docs/TASK_ORCHESTRATION.md", "docs/TASK_ORCHESTRATION.zh-CN.md"),
     ("docs/research/README.md", "docs/research/README.zh-CN.md"),
     ("docs/architecture/DECISIONS.md", "docs/architecture/DECISIONS.zh-CN.md"),
     (

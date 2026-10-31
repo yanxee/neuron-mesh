@@ -302,6 +302,38 @@ declared_metrics
 
 Self-declared metrics are claims, not evaluation results.
 
+### 3.15 `CoordinationTask/v1`
+
+The reference implementation persists this object in SQLite and exposes it
+through `/v1/tasks`. It is deliberately marked `coordination`, because model
+stage execution is not part of this contract yet.
+
+```text
+task_id
+objective
+requester_host_id
+target_hosts: 1..40
+participant_count
+max_parallel: 1..20
+requested_tflops / granted_tflops
+execution_mode: coordination
+status: pending | running | complete | failed
+created_at / service_start_at / completed_at
+assignments[]:
+  assignment_id / sequence
+  stage_name / stage_weight / capability
+  host_id / host_name
+  status: pending | active | done | failed
+  share_percent / allocated_tflops
+  service_seconds / started_at / ends_at / completed_at
+```
+
+Assignments are capability-addressed worker slots. A task may cover many hosts,
+but only `max_parallel` assignments may be active simultaneously. Each active
+assignment has its own deadline; completion frees one slot and may admit one
+pending assignment. The graph does not render a permanent task-to-worker edge.
+It renders a short-lived activity pulse for each active request or worker call.
+
 ## 4. Transport mapping
 
 ### 4.1 Phase 1: trusted HTTP/TLS reference path

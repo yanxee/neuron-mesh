@@ -71,16 +71,16 @@ python scripts/graph_demo.py --open
 滚轮缩放，并选择节点查看详情。节点公告、远端算力和加密存储支持发生时，
 对应关系线会在短时间内发光闪烁。
 
-## 6. 预览 50 台主机的虚拟集群
+## 6. 预览 256 台主机的虚拟集群
 
 节点服务运行后，打开：
 
-<http://127.0.0.1:8000/graph?demo=fleet50>
+<http://127.0.0.1:8000/graph?demo=fleet256>
 
-该入口不需要 Token，因为 50 台主机由浏览器确定性生成，不会写入节点数据库。
-动画会依次加入 50 台异构主机。点击任意主机可查看 CPU、内存、加速器、存储、
+该入口不需要 Token，因为 256 台主机由浏览器确定性生成，不会写入节点数据库。
+动画会依次加入 256 台异构主机。点击任意主机可查看 CPU、内存、加速器、存储、
 网络、估算算力、能力标签、故障域，以及两台跨故障域冗余备份主机。紫色菱形
-节点表示运行在该主机上的 Agent。该页面仅用于视觉演练，不代表已经存在 50 台
+节点表示运行在该主机上的 Agent。该页面仅用于视觉演练，不代表已经存在 256 台
 物理节点或真实资源承诺。
 
 主机集群组建完成后会出现青色任务中枢。演示会在长上下文研究、多模态理解、
@@ -100,5 +100,31 @@ python scripts/graph_demo.py --open
 调度器会同时保持最多 3 个申请处于活动状态，每个申请由不同入口主机发起。
 绿色请求脉冲表示主机向任务中枢申请资源，青色脉冲表示当前正在通信的唯一阶段
 主机。
+
+## 7. 创建协调任务
+
+后端已经实现任务协调，并使用 SQLite 持久化任务状态：
+
+```bash
+curl http://127.0.0.1:8000/v1/tasks \
+  -H "Authorization: Bearer $NEURON_SHARED_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "objective": "利用分布式记忆生成经过校验的答案",
+    "target_hosts": 3,
+    "max_parallel": 2,
+    "requested_tflops": 500,
+    "stages": [
+      {"name": "规划", "capability": "full-model"},
+      {"name": "召回上下文", "capability": "cache"},
+      {"name": "推理", "capability": "inference"},
+      {"name": "校验", "capability": "checkpoint"}
+    ]
+  }'
+```
+
+使用 `GET /v1/tasks/{task_id}` 查询任务。调度器最多同时保持 `max_parallel`
+个调用，在并发任务增加时重新计算主机份额，并为每次调用分配独立服务时长。
+在接入真实模型阶段执行器之前，`execution_mode` 始终为 `coordination`。
 同一主机可以持有多个任务租约；点击主机可查看所有并发分配、资源占比和获批
 TFLOPS。新增申请会触发份额再平衡，黄色 `N×` 标记表示该主机正被多个任务共享。

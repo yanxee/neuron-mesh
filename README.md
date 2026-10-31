@@ -21,7 +21,7 @@
 
 **Search terms:** decentralized AI · distributed inference · large language models · LLM network · peer-to-peer AI · federated learning · continual learning · persistent memory · long-term memory · heterogeneous computing · edge AI · multi-modal AI · OpenAI-compatible API · 去中心化大模型 · 分布式推理 · 联邦学习 · 长期记忆 · 异构算力
 
-![NeuronMesh graph with concurrent ingress requests, random host coverage, 1–20 concurrent calls and unequal per-host service windows](docs/assets/fleet50-dashboard.png)
+![NeuronMesh graph with 256 nodes, concurrent ingress requests, random host coverage and unequal per-host service windows](docs/assets/fleet256-dashboard.png)
 
 ## Help build the measurable network
 
@@ -110,12 +110,14 @@ Architecture documents:
 - `status`/`drain` CLI commands and `/readyz`;
 - two-node Docker Compose, tests and GitHub Actions CI.
 - Obsidian-style live graph of hosts, virtual roles and node-to-node activity;
-- a deterministic 50-host join animation with hardware, compute, capabilities,
+- a deterministic 256-host join animation with hardware, compute, capabilities,
   Agent roles and cross-failure-domain redundancy previews;
 - task-driven asynchronous dispatch with random coverage from 1 to 40 hosts and
   visible per-host subtask assignment across failure domains;
 - up to three simultaneous ingress-host resource requests with proportional
   compute shares, overlapping leases and automatic rebalancing;
+- a SQLite-backed coordination scheduler with `/v1/tasks`, capability-aware
+  host selection, 1–20 asynchronous call slots and independent service deadlines;
 - animated relation lines for discovery, remote compute and encrypted-storage support.
 
 ## Not implemented yet
@@ -160,8 +162,10 @@ Live relationship graph: <http://127.0.0.1:8000/graph>
 
 The graph asks for the configured bearer token and keeps it in tab memory only. Start
 `python scripts/graph_demo.py --open` for a populated two-node demonstration.
-Open <http://127.0.0.1:8000/graph?demo=fleet50> for a browser-generated 50-host
-fleet rehearsal. This visual simulation does not claim that 50 real nodes exist.
+Open <http://127.0.0.1:8000/graph?demo=fleet256> for a browser-generated 256-host
+fleet rehearsal. This visual simulation does not claim that 256 real nodes exist.
+The same browser-only demo is published at
+<https://yanxee.github.io/neuron-mesh/graph-demo.html?demo=fleet256>.
 The rehearsal also cycles through five task objectives and randomly covers between
 1 and 40 hosts for each decomposed plan. Each asynchronous batch contacts a random
 1–20 hosts at once. Every call keeps its own service deadline derived from host
@@ -170,6 +174,11 @@ connected longer while faster hosts release their slots earlier.
 Up to three entry hosts can request resources concurrently; shared hosts expose
 their per-task compute percentages, and expired requests are replaced and
 rebalanced automatically.
+
+Real task coordination is available through `POST /v1/tasks`; task state is
+persisted and visible in the authenticated `/graph` view. This reference slice
+schedules coordination windows only and does not claim to execute real model
+shards yet.
 
 ## Operations
 
@@ -296,6 +305,7 @@ See [.env.example](.env.example) for the complete example.
 - [Documentation language policy](docs/I18N.md)
 - [Research library](docs/research/README.md)
 - [System architecture](ARCHITECTURE.md)
+- [Coordination task scheduling principles](docs/TASK_ORCHESTRATION.md)
 - [Research plan](docs/research/invite-only-executable-plan.en.md)
 - [Persistent memory and continual learning](docs/research/continual-learning-persistent-memory.en.md)
 - [Spatial integration](docs/research/metaverse-integration.en.md)

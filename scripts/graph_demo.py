@@ -163,9 +163,29 @@ def main() -> None:
                     "messages": [{"role": "user", "content": "Show a compute pulse"}],
                 },
             )
+            task = request(
+                "POST",
+                "http://127.0.0.1:18082/v1/tasks",
+                payload={
+                    "objective": "Build a verified answer across both demo hosts",
+                    "stages": [
+                        {"name": "Plan", "capability": "full-model"},
+                        {"name": "Retrieve context", "capability": "cache"},
+                        {
+                            "name": "Run distributed inference",
+                            "capability": "full-model",
+                        },
+                        {"name": "Verify and checkpoint", "capability": "cache"},
+                    ],
+                    "target_hosts": 2,
+                    "max_parallel": 2,
+                    "requested_tflops": 500,
+                },
+            )
 
             graph_url = "http://127.0.0.1:18082/graph"
             print(f"Graph demo: {graph_url}")
+            print(f"Coordination task: {task['task_id']}")
             print(
                 "The dashboard asks for the bearer token "
                 f"'{TOKEN}' because the graph data remains authenticated."

@@ -72,15 +72,15 @@ scroll to zoom and select a node to inspect it. Peer announcements, remote
 compute and encrypted-storage support animate the corresponding relationship
 line for a short time.
 
-## 6. Preview a 50-host fleet
+## 6. Preview a 256-host fleet
 
 With the node service running, open:
 
-<http://127.0.0.1:8000/graph?demo=fleet50>
+<http://127.0.0.1:8000/graph?demo=fleet256>
 
 No token is required because this route creates deterministic synthetic data in
 the browser and never writes it to the node database. The animation introduces
-50 heterogeneous hosts in sequence. Select any host to inspect its CPU, memory,
+256 heterogeneous hosts in sequence. Select any host to inspect its CPU, memory,
 accelerator, storage, network, compute estimate, capability tags, failure domain
 and two cross-domain redundancy peers. Purple diamond nodes represent the Agent
 hosted on each machine. This is a visual rehearsal, not evidence of 50 physical
@@ -112,4 +112,31 @@ hold multiple task leases; its detail panel lists every concurrent assignment,
 allocation percentage and granted TFLOPS. Expanding the active task count
 recalculates shares, and an amber `N×` badge marks a host shared by multiple
 requests.
+
+## 7. Create a coordination task
+
+Task coordination is also implemented in the backend and persisted in SQLite:
+
+```bash
+curl http://127.0.0.1:8000/v1/tasks \
+  -H "Authorization: Bearer $NEURON_SHARED_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "objective": "Build a verified answer from distributed memory",
+    "target_hosts": 3,
+    "max_parallel": 2,
+    "requested_tflops": 500,
+    "stages": [
+      {"name": "Plan", "capability": "full-model"},
+      {"name": "Retrieve context", "capability": "cache"},
+      {"name": "Infer", "capability": "inference"},
+      {"name": "Verify", "capability": "checkpoint"}
+    ]
+  }'
+```
+
+Inspect it with `GET /v1/tasks/{task_id}`. The service keeps up to
+`max_parallel` calls active, recalculates host shares when another task starts,
+and assigns each call an independent duration. `execution_mode` is
+`coordination` until a real model-stage executor is connected.
 
