@@ -6,13 +6,15 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 
+from .activity import ActivityBus
 from .backend import LocalBackend
 from .backup import BackupManager
 from .capabilities import CapabilityService
@@ -41,6 +43,15 @@ from .spatial import SpatialManager
 from .storage import Database, utc_now
 
 logger = logging.getLogger("neuron_mesh")
+GRAPH_HTML_PATH = Path(__file__).with_name("graph.html")
+
+
+def _node_graph_id(node_id: str) -> str:
+    return f"node:{node_id}"
+
+
+def _role_graph_id(role_id: str) -> str:
+    return f"role:{role_id}"
 
 
 @dataclass(slots=True)
@@ -57,6 +68,7 @@ class Runtime:
     roles: RoleStore
     migrations: RoleMigrationService
     spatial: SpatialManager
+    activity: ActivityBus
     resident_state: str = "resident"
     maintenance_task: asyncio.Task[None] | None = None
 
@@ -138,6 +150,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             roles, memory, node_id=identity.node_id
         )
         spatial = SpatialManager(roles)
+        activity = ActivityBus()
         backend = LocalBackend(configured)
         runtime = Runtime(
             settings=configured,
@@ -152,6 +165,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             roles=roles,
             migrations=migrations,
             spatial=spatial,
+            activity=activity,
         )
         app.state.runtime = runtime
 
@@ -231,6 +245,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
         return {"ready": True, "state": capability.resident_state}
 
+    @app.get("/graph", response_class=HTMLResponse, include_in_schema=False)
+    @app.get("/graph/", response_class=HTMLResponse, include_in_schema=False)
+    async def graph_page() -> HTMLResponse:
+        return HTMLResponse(
+            GRAPH_HTML_PATH.read_text(encoding="utf-8"),
+            headers={
+                "Cache-Control": "no-store",
+                "Content-Security-Policy": (
+                    "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+                    "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+                    "connect-src 'self'; base-uri 'none'; frame-ancestors 'none'"
+                ),
+                "Referrer-Policy": "no-referrer",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
+
     @app.get("/v1/node/capabilities", dependencies=[Depends(auth)])
     async def node_capabilities(request: Request) -> dict[str, object]:
         state = runtime(request)
@@ -269,11 +300,157 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/v1/peers/announce", dependencies=[Depends(auth)])
     async def announce_peer(payload: PeerAnnouncement, request: Request) -> dict[str, object]:
+        state = runtime(request)
         try:
-            peer = runtime(request).peers.register(payload)
+            peer = state.peers.register(payload)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+        state.activity.record(
+            _node_graph_id(peer.node_id),
+            _node_graph_id(state.identity.node_id),
+            "discovery",
+            detail=peer.name,
+        )
         return peer.model_dump(mode="json")
+
+    @app.get("/v1/observability/graph", dependencies=[Depends(auth)])
+    async def observability_graph(request: Request) -> dict[str, object]:
+        state = runtime(request)
+        local_capability = state.capabilities.current(state.resident_state)
+        peers = state.peers.list_live()
+        nodes: list[dict[str, object]] = [
+            {
+                "id": _node_graph_id(state.identity.node_id),
+                "kind": "host",
+                "label": local_capability.node_name,
+                "node_id": state.identity.node_id,
+                "is_local": True,
+                "online": True,
+                "device_class": local_capability.device_class,
+                "unit_scope": local_capability.unit_scope,
+                "capacity_tier": (
+                    local_capability.derived_capacity[0].tier
+                    if local_capability.derived_capacity
+                    else "unknown"
+                ),
+                "resident_state": state.resident_state,
+                "service_roles": local_capability.service_roles,
+                "rtt_ms": None,
+            }
+        ]
+        edges: list[dict[str, object]] = []
+        for peer in peers:
+            nodes.append(
+                {
+                    "id": _node_graph_id(peer.node_id),
+                    "kind": "host",
+                    "label": peer.name,
+                    "node_id": peer.node_id,
+                    "is_local": False,
+                    "online": peer.online,
+                    "device_class": peer.capability.device_class,
+                    "unit_scope": peer.capability.unit_scope,
+                    "capacity_tier": (
+                        peer.capability.derived_capacity[0].tier
+                        if peer.capability.derived_capacity
+                        else "unknown"
+                    ),
+                    "resident_state": peer.capability.resident_state,
+                    "service_roles": peer.capability.service_roles,
+                    "rtt_ms": peer.rtt_ms,
+                }
+            )
+            edges.append(
+                {
+                    "id": f"peer:{state.identity.node_id}:{peer.node_id}",
+                    "source": _node_graph_id(state.identity.node_id),
+                    "target": _node_graph_id(peer.node_id),
+                    "kind": "peer",
+                    "online": peer.online,
+                    "rtt_ms": peer.rtt_ms,
+                }
+            )
+
+        role_summaries: list[tuple[str, dict[str, object]]] = [
+            (state.identity.node_id, item) for item in state.roles.summaries()
+        ]
+
+        async def remote_roles(peer: Any) -> list[tuple[str, dict[str, object]]]:
+            try:
+                items = await state.peers.get_list(
+                    peer.public_url,
+                    "/v1/roles/summary",
+                    timeout=min(2.0, configured.request_timeout_seconds),
+                )
+                return [(peer.node_id, item) for item in items]
+            except (httpx.HTTPError, OSError, ValueError):
+                return []
+
+        if peers:
+            remote_roles_by_node = await asyncio.gather(
+                *(remote_roles(peer) for peer in peers)
+            )
+            for group in remote_roles_by_node:
+                role_summaries.extend(group)
+
+        roles_by_id: dict[str, dict[str, object]] = {}
+        role_hosts: dict[str, set[str]] = {}
+        for source_node_id, summary in role_summaries:
+            role_id = str(summary["role_id"])
+            primary_host_id = str(summary.get("primary_host_id") or source_node_id)
+            hosts = role_hosts.setdefault(role_id, set())
+            hosts.add(primary_host_id)
+            existing = roles_by_id.get(role_id)
+            if existing is None:
+                roles_by_id[role_id] = {
+                    "id": _role_graph_id(role_id),
+                    "kind": "role",
+                    "label": str(summary.get("display_name") or role_id),
+                    "role_id": role_id,
+                    "status": str(summary.get("status", "active")),
+                    "hosts": [],
+                }
+            elif summary.get("status") == "migrating":
+                roles_by_id[role_id]["status"] = "migrating"
+
+        for role_id, role in roles_by_id.items():
+            host_ids = sorted(role_hosts[role_id])
+            role["hosts"] = [_node_graph_id(host_id) for host_id in host_ids]
+            nodes.append(role)
+            for host_id in host_ids:
+                edges.append(
+                    {
+                        "id": f"hosts:{host_id}:{role_id}",
+                        "source": _node_graph_id(host_id),
+                        "target": _role_graph_id(role_id),
+                        "kind": "hosts",
+                        "online": host_id
+                        in {
+                            state.identity.node_id,
+                            *(peer.node_id for peer in peers),
+                        },
+                        "rtt_ms": None,
+                    }
+                )
+
+        activity = state.activity.snapshot(max_age_seconds=20)
+        return {
+            "server_time": time.time(),
+            "mode": (
+                "networked"
+                if peers and not configured.offline
+                else "offline-autonomous"
+            ),
+            "summary": {
+                "hosts": len(nodes) - len(roles_by_id),
+                "roles": len(roles_by_id),
+                "live_edges": sum(1 for edge in edges if edge["online"]),
+                "recent_activity": len(activity),
+            },
+            "nodes": nodes,
+            "edges": edges,
+            "activity": activity,
+        }
 
     @app.post("/v1/node/drain", dependencies=[Depends(auth)])
     async def drain(request: Request) -> ShutdownReceipt:
@@ -306,6 +483,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         request: Request,
         route_header: str | None = Header(default=None, alias="X-Neuron-Route"),
         forwarded: str | None = Header(default=None, alias="X-Neuron-Forwarded"),
+        source_node_id: str | None = Header(
+            default=None, alias="X-Neuron-Source-Node"
+        ),
     ):
         state = runtime(request)
         route = (route_header or "auto").lower()
@@ -329,6 +509,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "mode": "networked",
                     "executed_by": peer.node_id,
                 }
+                state.activity.record(
+                    _node_graph_id(state.identity.node_id),
+                    _node_graph_id(peer.node_id),
+                    "compute",
+                    detail=payload.model,
+                )
             except httpx.HTTPError as exc:
                 if route == "network":
                     raise HTTPException(
@@ -352,6 +538,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 "executed_by": state.identity.node_id,
             }
 
+        known_peer_ids = {peer.node_id for peer in state.peers.list_live()}
+        if forwarded == "1" and source_node_id in known_peer_ids:
+            state.activity.record(
+                _node_graph_id(source_node_id),
+                _node_graph_id(state.identity.node_id),
+                "compute",
+                detail=payload.model,
+            )
+
         if payload.stream:
             return StreamingResponse(
                 state.backend.stream_text(response),
@@ -368,6 +563,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     ) -> dict[str, object]:
         state = runtime(request)
         record = state.memory.write(payload)
+        if payload.role_id:
+            state.activity.record(
+                _role_graph_id(payload.role_id),
+                _node_graph_id(state.identity.node_id),
+                "role",
+                detail="memory-write",
+            )
         if replicate and not state.settings.offline:
             await state.backups.backup_memory(record)
             record = state.memory.get(record.memory_id) or record
@@ -492,6 +694,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 source_failure_domain=payload.source_failure_domain,
             )
         )
+        known_peer_ids = {peer.node_id for peer in state.peers.list_live()}
+        if payload.source_node_id in known_peer_ids:
+            state.activity.record(
+                _node_graph_id(payload.source_node_id),
+                _node_graph_id(state.identity.node_id),
+                "storage",
+                detail=payload.memory_id,
+            )
         return {"status": "stored", "memory_id": payload.memory_id}
 
     @app.get(
@@ -521,7 +731,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/v1/roles", dependencies=[Depends(auth)])
     async def create_role(payload: RoleCreateRequest, request: Request) -> dict[str, object]:
-        return runtime(request).roles.create(payload).model_dump(mode="json")
+        state = runtime(request)
+        role = state.roles.create(payload)
+        state.activity.record(
+            _role_graph_id(role.role_id),
+            _node_graph_id(state.identity.node_id),
+            "role",
+            detail="created",
+        )
+        return role.model_dump(mode="json")
+
+    @app.get("/v1/roles/summary", dependencies=[Depends(auth)])
+    async def role_summaries(request: Request) -> list[dict[str, object]]:
+        return runtime(request).roles.summaries()
 
     @app.post("/v1/roles/import", dependencies=[Depends(auth)])
     async def import_role(
@@ -601,7 +823,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         request: Request,
     ) -> dict[str, object]:
         try:
-            return runtime(request).spatial.submit_intent(session_id, payload)
+            state = runtime(request)
+            result = state.spatial.submit_intent(session_id, payload)
+            if result.get("accepted"):
+                state.activity.record(
+                    _role_graph_id(str(result["role_id"])),
+                    _node_graph_id(state.identity.node_id),
+                    "role",
+                    detail=str(result["action"]),
+                )
+            return result
         except ValueError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 

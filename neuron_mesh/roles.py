@@ -88,6 +88,20 @@ class RoleStore:
             )
         return self.get(role_id)
 
+    def summaries(self) -> list[dict[str, object]]:
+        """Return graph-safe fields without owner or namespace identifiers."""
+
+        with self.database.connection() as connection:
+            rows = connection.execute(
+                """
+                SELECT role_id, display_name, primary_host_id, status, updated_at
+                FROM roles
+                WHERE status != 'retired'
+                ORDER BY role_id
+                """
+            ).fetchall()
+        return [dict(row) for row in rows]
+
 
 class RoleMigrationService:
     def __init__(

@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NeuronMesh Graph</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070b10;
+      --panel: rgba(13, 20, 29, 0.88);
+      --panel-solid: #0d141d;
+      --line: rgba(139, 170, 201, 0.16);
+      --text: #e7f2ff;
+      --muted: #8da3b8;
+      --green: #31e6a1;
+      --blue: #5ebcff;
+      --purple: #c796ff;
+      --amber: #ffc56e;
+      --red: #ff7381;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 48% 38%, rgba(37, 87, 97, 0.13), transparent 35rem),
+        radial-gradient(circle at 13% 82%, rgba(50, 91, 150, 0.12), transparent 30rem),
+        var(--bg);
+      color: var(--text);
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+    .app { display: grid; grid-template-rows: 68px 1fr; height: 100%; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0 1.25rem;
+      border-bottom: 1px solid var(--line);
+      background: rgba(7, 11, 16, 0.78);
+      backdrop-filter: blur(16px);
+      z-index: 5;
+    }
+
+    .brand { display: flex; align-items: center; gap: 0.8rem; }
+    .brand-mark {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      border: 1px solid rgba(49, 230, 161, 0.42);
+      border-radius: 11px;
+      background: radial-gradient(circle at 40% 35%, rgba(49, 230, 161, 0.4), transparent 65%);
+      box-shadow: 0 0 24px rgba(49, 230, 161, 0.14);
+    }
+    .brand-mark::before,
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 10px var(--green);
+    }
+    .brand-mark::before { left: 8px; top: 8px; }
+    .brand-mark::after { right: 7px; bottom: 8px; }
+
+    .brand h1 { margin: 0; font-size: 1rem; letter-spacing: -0.02em; }
+    .brand p { margin: 0.1rem 0 0; color: var(--muted); font-size: 0.72rem; }
+
+    .header-actions { display: flex; align-items: center; gap: 0.65rem; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.42rem 0.7rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+    .status.live .status-dot {
+      background: var(--green);
+      box-shadow: 0 0 10px var(--green);
+      animation: breathe 1.8s ease-in-out infinite;
+    }
+    @keyframes breathe { 50% { opacity: 0.4; } }
+
+    .icon-button {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(16, 27, 39, 0.8);
+      padding: 0.48rem 0.7rem;
+      cursor: pointer;
+    }
+    .icon-button:hover { border-color: rgba(94, 188, 255, 0.45); }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 310px;
+      min-height: 0;
+    }
+
+    .graph-stage { position: relative; min-width: 0; min-height: 0; }
+    #graphCanvas { width: 100%; height: 100%; display: block; cursor: grab; }
+    #graphCanvas.dragging { cursor: grabbing; }
+
+    .metrics {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      right: 1rem;
+      display: flex;
+      gap: 0.55rem;
+      pointer-events: none;
+      flex-wrap: wrap;
+    }
+    .metric {
+      min-width: 88px;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(8, 14, 21, 0.78);
+      backdrop-filter: blur(12px);
+    }
+    .metric strong { display: block; font-size: 1.1rem; }
+    .metric span { color: var(--muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .legend {
+      position: absolute;
+      left: 1rem;
+      bottom: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      max-width: calc(100% - 2rem);
+      padding: 0.65rem 0.8rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(8, 14, 21, 0.82);
+      color: var(--muted);
+      font-size: 0.72rem;
+      backdrop-filter: blur(12px);
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.35rem; }
+    .swatch { width: 8px; height: 8px; border-radius: 50%; }
+    .swatch.green { background: var(--green); }
+    .swatch.blue { background: var(--blue); }
+    .swatch.purple { background: var(--purple); }
+    .swatch.amber { background: var(--amber); }
+
+    aside {
+      min-height: 0;
+      overflow-y: auto;
+      padding: 1rem;
+      border-left: 1px solid var(--line);
+      background: rgba(9, 15, 22, 0.84);
+      backdrop-filter: blur(16px);
+    }
+    .panel {
+      margin-bottom: 1rem;
+      padding: 0.9rem;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(16, 25, 36, 0.64);
+    }
+    .panel h2 {
+      margin: 0 0 0.75rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .detail-empty { color: var(--muted); font-size: 0.82rem; line-height: 1.55; }
+    .detail-name { margin: 0 0 0.25rem; font-size: 1rem; }
+    .detail-type { color: var(--muted); font-size: 0.75rem; }
+    .detail-grid { display: grid; grid-template-columns: 1fr auto; gap: 0.45rem 0.8rem; margin-top: 0.8rem; font-size: 0.78rem; }
+    .detail-grid dt { color: var(--muted); }
+    .detail-grid dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+
+    .activity-list { list-style: none; margin: 0; padding: 0; }
+    .activity-item {
+      display: grid;
+      grid-template-columns: 8px 1fr auto;
+      gap: 0.6rem;
+      align-items: start;
+      padding: 0.55rem 0;
+      border-top: 1px solid rgba(139, 170, 201, 0.1);
+      font-size: 0.76rem;
+    }
+    .activity-item:first-child { border-top: 0; }
+    .activity-dot { width: 7px; height: 7px; margin-top: 0.28rem; border-radius: 50%; }
+    .activity-copy strong { display: block; font-size: 0.76rem; font-weight: 600; }
+    .activity-copy span { color: var(--muted); overflow-wrap: anywhere; }
+    .activity-time { color: var(--muted); font-size: 0.68rem; white-space: nowrap; }
+
+    .auth-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+      background: rgba(2, 6, 10, 0.72);
+      backdrop-filter: blur(12px);
+    }
+    .auth-backdrop.hidden { display: none; }
+    .auth-card {
+      width: min(430px, 100%);
+      padding: 1.5rem;
+      border: 1px solid rgba(49, 230, 161, 0.24);
+      border-radius: 18px;
+      background: linear-gradient(145deg, #101c27, #0b121a);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+    }
+    .auth-card h2 { margin: 0 0 0.45rem; font-size: 1.35rem; }
+    .auth-card p { margin: 0 0 1rem; color: var(--muted); font-size: 0.84rem; line-height: 1.55; }
+    .auth-card label { display: block; margin-bottom: 0.4rem; font-size: 0.78rem; }
+    .auth-card input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      outline: none;
+      background: #070c11;
+      color: var(--text);
+    }
+    .auth-card input:focus { border-color: rgba(49, 230, 161, 0.55); }
+    .auth-card button {
+      width: 100%;
+      margin-top: 0.75rem;
+      padding: 0.75rem;
+      border: 0;
+      border-radius: 10px;
+      background: var(--green);
+      color: #042018;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .auth-error { min-height: 1.1rem; margin-top: 0.65rem; color: var(--red); font-size: 0.78rem; }
+
+    @media (max-width: 900px) {
+      .workspace { grid-template-columns: 1fr; grid-template-rows: minmax(420px, 1fr) auto; }
+      aside { max-height: 38vh; border-left: 0; border-top: 1px solid var(--line); }
+    }
+    @media (max-width: 600px) {
+      .app { grid-template-rows: 60px 1fr; }
+      .brand p { display: none; }
+      .status span { display: none; }
+      .metrics { top: 0.7rem; left: 0.7rem; right: 0.7rem; }
+      .metric { min-width: 72px; padding: 0.45rem 0.6rem; }
+      .legend { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+          <h1>NeuronMesh Graph</h1>
+          <p data-i18n="subtitle">Live hosts, roles and activity</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status" id="connectionStatus">
+          <i class="status-dot"></i>
+          <span data-i18n="offline">Waiting for token</span>
+        </div>
+        <button class="icon-button" id="languageButton" type="button">中文</button>
+        <button class="icon-button" id="tokenButton" type="button" data-i18n="tokenButton">Token</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="graph-stage" aria-label="Live mesh graph">
+        <canvas id="graphCanvas" role="img" aria-label="Force-directed graph of NeuronMesh hosts and roles"></canvas>
+        <div class="metrics">
+          <div class="metric"><strong id="hostMetric">0</strong><span data-i18n="hosts">Hosts</span></div>
+          <div class="metric"><strong id="roleMetric">0</strong><span data-i18n="roles">Roles</span></div>
+          <div class="metric"><strong id="edgeMetric">0</strong><span data-i18n="liveEdges">Live edges</span></div>
+          <div class="metric"><strong id="eventMetric">0</strong><span data-i18n="events">Events</span></div>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><i class="swatch green"></i><span data-i18n="strongHost">Strong host</span></span>
+          <span class="legend-item"><i class="swatch blue"></i><span data-i18n="weakHost">Weak host</span></span>
+          <span class="legend-item"><i class="swatch purple"></i><span data-i18n="role">Virtual role</span></span>
+          <span class="legend-item"><i class="swatch amber"></i><span data-i18n="activityLine">Activity pulse</span></span>
+        </div>
+      </section>
+
+      <aside>
+        <section class="panel">
+          <h2 data-i18n="details">Selection</h2>
+          <div id="details" class="detail-empty" data-i18n="selectHint">
+            Select a host or role to inspect its relation.
+          </div>
+        </section>
+        <section class="panel">
+          <h2 data-i18n="activity">Recent activity</h2>
+          <ul class="activity-list" id="activityList"></ul>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div class="auth-backdrop" id="authModal">
+    <form class="auth-card" id="tokenForm">
+      <h2 data-i18n="authTitle">Open the live graph</h2>
+      <p data-i18n="authBody">
+        Enter the node's bearer token. It is kept in memory for this tab only and is never written to disk.
+      </p>
+      <label for="tokenInput" data-i18n="tokenLabel">Bearer token</label>
+      <input id="tokenInput" type="password" autocomplete="current-password" required>
+      <button type="submit" data-i18n="connect">Connect</button>
+      <div class="auth-error" id="authError" role="alert"></div>
+    </form>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const copy = {
+        en: {
+          subtitle: "Live hosts, roles and activity",
+          offline: "Waiting for token",
+          live: "Live",
+          degraded: "Connection degraded",
+          tokenButton: "Token",
+          hosts: "Hosts",
+          roles: "Roles",
+          liveEdges: "Live edges",
+          events: "Events",
+          strongHost: "Strong host",
+          weakHost: "Weak host",
+          role: "Virtual role",
+          activityLine: "Activity pulse",
+          details: "Selection",
+          activity: "Recent activity",
+          selectHint: "Select a host or role to inspect its relation.",
+          authTitle: "Open the live graph",
+          authBody: "Enter the node's bearer token. It is kept in memory for this tab only and is never written to disk.",
+          tokenLabel: "Bearer token",
+          connect: "Connect",
+          invalidToken: "The token was rejected.",
+          unreachable: "The node is temporarily unreachable.",
+          noActivity: "No recent cross-node activity.",
+          localHost: "Local host",
+          peerHost: "Peer host",
+          virtualRole: "Virtual role",
+          device: "Device",
+          tier: "Capacity",
+          state: "State",
+          rtt: "RTT",
+          services: "Services",
+          roleStatus: "Role status",
+          roleHosts: "Hosted by",
+          rediscovery: "Capability announcement",
+          compute: "Compute support",
+          storage: "Encrypted storage support",
+          roleActivity: "Role activity",
+          secondsAgo: "s ago",
+        },
+        zh: {
+          subtitle: "实时主机、角色与活动",
+          offline: "等待令牌",
+          live: "实时连接",
+          degraded: "连接降级",
+          tokenButton: "令牌",
+          hosts: "主机",
+          roles: "角色",
+          liveEdges: "在线关系",
+          events: "活动",
+          strongHost: "强神经元",
+          weakHost: "弱神经元",
+          role: "虚拟角色",
+          activityLine: "活动脉冲",
+          details: "选中详情",
+          activity: "最近活动",
+          selectHint: "选择一个主机或角色查看关系详情。",
+          authTitle: "打开实时关系图",
+          authBody: "输入节点 Bearer Token。令牌只保存在当前标签页内存中，不写入磁盘。",
+          tokenLabel: "Bearer Token",
+          connect: "连接",
+          invalidToken: "令牌验证失败。",
+          unreachable: "节点暂时不可达。",
+          noActivity: "最近没有跨节点活动。",
+          localHost: "当前主机",
+          peerHost: "节点主机",
+          virtualRole: "虚拟角色",
+          device: "设备",
+          tier: "能力等级",
+          state: "状态",
+          rtt: "延迟",
+          services: "服务角色",
+          roleStatus: "角色状态",
+          roleHosts: "承载主机",
+          rediscovery: "节点能力公告",
+          compute: "算力支持",
+          storage: "加密存储支持",
+          roleActivity: "角色活动",
+          secondsAgo: "秒前",
+        }
+      };
+
+      const colors = {
+        green: "#31e6a1",
+        blue: "#5ebcff",
+        purple: "#c796ff",
+        amber: "#ffc56e",
+        muted: "#71879b",
+      };
+      const kindColors = {
+        discovery: "#5ebcff",
+        compute: "#31e6a1",
+        storage: "#ffc56e",
+        role: "#c796ff",
+      };
+
+      let language = (navigator.language || "en").toLowerCase().startsWith("zh") ? "zh" : "en";
+      let token = "";
+      let current = null;
+      let nodes = [];
+      let edges = [];
+      let activities = [];
+      let selectedId = null;
+      let hoveredId = null;
+      let scale = 1;
+      let panX = 0;
+      let panY = 0;
+      let dragging = false;
+      let dragMoved = false;
+      let dragStart = null;
+      let lastFrame = performance.now();
+      let pollTimer = null;
+      let clockOffset = 0;
+
+      const canvas = document.getElementById("graphCanvas");
+      const ctx = canvas.getContext("2d");
+      const authModal = document.getElementById("authModal");
+      const authError = document.getElementById("authError");
+      const tokenForm = document.getElementById("tokenForm");
+      const tokenInput = document.getElementById("tokenInput");
+      const statusEl = document.getElementById("connectionStatus");
+
+      function t(key) {
+        return copy[language][key] || copy.en[key] || key;
+      }
+
+      function applyLanguage() {
+        document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
+        document.getElementById("languageButton").textContent = language === "zh" ? "EN" : "中文";
+        document.querySelectorAll("[data-i18n]").forEach((element) => {
+          element.textContent = t(element.dataset.i18n);
+        });
+        if (selectedId) renderDetails();
+        renderActivities();
+      }
+
+      function setStatus(kind, text) {
+        statusEl.classList.toggle("live", kind === "live");
+        statusEl.querySelector("span").textContent = text;
+      }
+
+      function showAuth(message = "") {
+        authModal.classList.remove("hidden");
+        authError.textContent = message;
+        setStatus("offline", t("offline"));
+        window.setTimeout(() => tokenInput.focus(), 30);
+      }
+
+      function hideAuth() {
+        authModal.classList.add("hidden");
+        authError.textContent = "";
+      }
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+        canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        canvas.dataset.width = String(rect.width);
+        canvas.dataset.height = String(rect.height);
+      }
+
+      function ensurePositions(nextNodes) {
+        const existing = new Map(nodes.map((node) => [node.id, node]));
+        const width = canvas.clientWidth || 800;
+        const height = canvas.clientHeight || 600;
+        const local = nextNodes.find((node) => node.is_local);
+        return nextNodes.map((node, index) => {
+          const previous = existing.get(node.id);
+          const angle = (index / Math.max(nextNodes.length, 1)) * Math.PI * 2;
+          const radius = node.kind === "role" ? 220 : 280;
+          return {
+            ...node,
+            x: previous?.x ?? width / 2 + Math.cos(angle) * radius,
+            y: previous?.y ?? height / 2 + Math.sin(angle) * radius,
+            vx: previous?.vx ?? 0,
+            vy: previous?.vy ?? 0,
+            radius: node.id === local?.id ? 18 : node.kind === "role" ? 9.5 : 12,
+          };
+        });
+      }
+
+      function applyGraph(payload) {
+        current = payload;
+        clockOffset = Number(payload.server_time || Date.now() / 1000) - Date.now() / 1000;
+        nodes = ensurePositions(payload.nodes || []);
+        edges = payload.edges || [];
+        activities = payload.activity || [];
+        document.getElementById("hostMetric").textContent = String(payload.summary?.hosts || 0);
+        document.getElementById("roleMetric").textContent = String(payload.summary?.roles || 0);
+        document.getElementById("edgeMetric").textContent = String(payload.summary?.live_edges || 0);
+        document.getElementById("eventMetric").textContent = String(payload.summary?.recent_activity || 0);
+        renderDetails();
+        renderActivities();
+      }
+
+      async function loadGraph() {
+        if (!token) return;
+        try {
+          const response = await fetch("/v1/observability/graph", {
+            headers: { Authorization: `Bearer ${token}` },
+            cache: "no-store",
+          });
+          if (response.status === 401) {
+            token = "";
+            showAuth(t("invalidToken"));
+            return;
+          }
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          applyGraph(await response.json());
+          hideAuth();
+          setStatus("live", `${t("live")} · ${current.mode}`);
+        } catch (error) {
+          setStatus("degraded", t("unreachable"));
+        }
+      }
+
+      tokenForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        token = tokenInput.value.trim();
+        if (!token) return;
+        await loadGraph();
+        tokenInput.value = "";
+        if (token && !pollTimer) pollTimer = window.setInterval(loadGraph, 2600);
+      });
+
+      document.getElementById("tokenButton").addEventListener("click", () => showAuth());
+      document.getElementById("languageButton").addEventListener("click", () => {
+        language = language === "zh" ? "en" : "zh";
+        applyLanguage();
+      });
+
+      function nodeById(id) {
+        return nodes.find((node) => node.id === id);
+      }
+
+      function graphPoint(event) {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        return {
+          screenX: x,
+          screenY: y,
+          x: (x - panX) / scale,
+          y: (y - panY) / scale,
+        };
+      }
+
+      function nearestNode(event) {
+        const point = graphPoint(event);
+        let best = null;
+        let bestDistance = 24;
+        for (const node of nodes) {
+          const distance = Math.hypot(node.x - point.x, node.y - point.y);
+          if (distance < bestDistance) {
+            best = node;
+            bestDistance = distance;
+          }
+        }
+        return best;
+      }
+
+      canvas.addEventListener("pointerdown", (event) => {
+        dragging = true;
+        dragMoved = false;
+        dragStart = { x: event.clientX, y: event.clientY, panX, panY };
+        canvas.classList.add("dragging");
+        canvas.setPointerCapture(event.pointerId);
+      });
+      canvas.addEventListener("pointermove", (event) => {
+        if (dragging && dragStart) {
+          const dx = event.clientX - dragStart.x;
+          const dy = event.clientY - dragStart.y;
+          if (Math.abs(dx) + Math.abs(dy) > 3) dragMoved = true;
+          panX = dragStart.panX + dx;
+          panY = dragStart.panY + dy;
+        } else {
+          const node = nearestNode(event);
+          hoveredId = node?.id || null;
+          canvas.style.cursor = node ? "pointer" : "grab";
+        }
+      });
+      canvas.addEventListener("pointerup", (event) => {
+        dragging = false;
+        canvas.classList.remove("dragging");
+        if (!dragMoved) {
+          const node = nearestNode(event);
+          selectedId = node?.id || null;
+          renderDetails();
+        }
+        dragStart = null;
+      });
+      canvas.addEventListener("pointerleave", () => {
+        dragging = false;
+        hoveredId = null;
+        canvas.classList.remove("dragging");
+      });
+      canvas.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const worldX = (x - panX) / scale;
+        const worldY = (y - panY) / scale;
+        const next = Math.min(2.6, Math.max(0.35, scale * Math.exp(-event.deltaY * 0.001)));
+        panX = x - worldX * next;
+        panY = y - worldY * next;
+        scale = next;
+      }, { passive: false });
+
+      function renderDetails() {
+        const container = document.getElementById("details");
+        container.replaceChildren();
+        const node = selectedId ? nodeById(selectedId) : null;
+        if (!node) {
+          const hint = document.createElement("div");
+          hint.className = "detail-empty";
+          hint.textContent = t("selectHint");
+          container.append(hint);
+          return;
+        }
+
+        const title = document.createElement("h3");
+        title.className = "detail-name";
+        title.textContent = node.label;
+        const type = document.createElement("div");
+        type.className = "detail-type";
+        type.textContent = node.kind === "role"
+          ? t("virtualRole")
+          : node.is_local
+            ? t("localHost")
+            : t("peerHost");
+        const grid = document.createElement("dl");
+        grid.className = "detail-grid";
+
+        const rows = [];
+        if (node.kind === "role") {
+          rows.push([t("roleStatus"), node.status || "active"]);
+          rows.push([t("roleHosts"), String(node.hosts?.length || 0)]);
+        } else {
+          rows.push([t("device"), node.device_class || "unknown"]);
+          rows.push([t("tier"), node.capacity_tier || "unknown"]);
+          rows.push([t("state"), node.resident_state || "unknown"]);
+          if (node.rtt_ms != null) rows.push([t("rtt"), `${Math.round(node.rtt_ms)} ms`]);
+          rows.push([t("services"), (node.service_roles || []).join(", ")]);
+        }
+        for (const [label, value] of rows) {
+          const dt = document.createElement("dt");
+          dt.textContent = label;
+          const dd = document.createElement("dd");
+          dd.textContent = value;
+          grid.append(dt, dd);
+        }
+        container.append(title, type, grid);
+      }
+
+      function activityLabel(kind) {
+        return {
+          discovery: t("rediscovery"),
+          compute: t("compute"),
+          storage: t("storage"),
+          role: t("roleActivity"),
+        }[kind] || kind;
+      }
+
+      function renderActivities() {
+        const list = document.getElementById("activityList");
+        list.replaceChildren();
+        if (!activities.length) {
+          const empty = document.createElement("li");
+          empty.className = "detail-empty";
+          empty.textContent = t("noActivity");
+          list.append(empty);
+          return;
+        }
+        const now = current?.server_time || Date.now() / 1000;
+        [...activities].reverse().slice(0, 10).forEach((event) => {
+          const item = document.createElement("li");
+          item.className = "activity-item";
+          const dot = document.createElement("i");
+          dot.className = "activity-dot";
+          dot.style.background = kindColors[event.kind] || colors.muted;
+          dot.style.boxShadow = `0 0 10px ${dot.style.background}`;
+          const content = document.createElement("div");
+          content.className = "activity-copy";
+          const title = document.createElement("strong");
+          title.textContent = activityLabel(event.kind);
+          const detail = document.createElement("span");
+          const sourceName = nodeById(event.source)?.label || event.source;
+          const targetName = nodeById(event.target)?.label || event.target;
+          detail.textContent = `${sourceName} → ${targetName}${event.detail ? ` · ${event.detail}` : ""}`;
+          content.append(title, detail);
+          const time = document.createElement("time");
+          time.className = "activity-time";
+          time.textContent = `${Math.max(0, Math.round(now - event.occurred_at))}${t("secondsAgo")}`;
+          item.append(dot, content, time);
+          list.append(item);
+        });
+      }
+
+      function simulate(delta) {
+        const centerX = (canvas.clientWidth || 800) / 2;
+        const centerY = (canvas.clientHeight || 600) / 2;
+        for (const node of nodes) {
+          node.fx = (centerX - node.x) * 0.00018;
+          node.fy = (centerY - node.y) * 0.00018;
+        }
+        for (let i = 0; i < nodes.length; i += 1) {
+          for (let j = i + 1; j < nodes.length; j += 1) {
+            const a = nodes[i];
+            const b = nodes[j];
+            const dx = b.x - a.x || 0.01;
+            const dy = b.y - a.y || 0.01;
+            const distance2 = Math.max(dx * dx + dy * dy, 100);
+            const force = Math.min(5.2, 6200 / distance2);
+            const distance = Math.sqrt(distance2);
+            const fx = (dx / distance) * force;
+            const fy = (dy / distance) * force;
+            a.fx -= fx;
+            a.fy -= fy;
+            b.fx += fx;
+            b.fy += fy;
+          }
+        }
+        for (const edge of edges) {
+          const a = nodeById(edge.source);
+          const b = nodeById(edge.target);
+          if (!a || !b) continue;
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const distance = Math.max(1, Math.hypot(dx, dy));
+          const preferred = edge.kind === "hosts" ? 135 : 260;
+          const force = (distance - preferred) * (edge.kind === "hosts" ? 0.002 : 0.0012);
+          const fx = (dx / distance) * force;
+          const fy = (dy / distance) * force;
+          a.fx += fx;
+          a.fy += fy;
+          b.fx -= fx;
+          b.fy -= fy;
+        }
+        for (const node of nodes) {
+          node.vx = (node.vx + node.fx * delta) * 0.86;
+          node.vy = (node.vy + node.fy * delta) * 0.86;
+          node.vx = Math.max(-4, Math.min(4, node.vx));
+          node.vy = Math.max(-4, Math.min(4, node.vy));
+          node.x += node.vx;
+          node.y += node.vy;
+        }
+      }
+
+      function edgeHighlighted(edge) {
+        return !selectedId || edge.source === selectedId || edge.target === selectedId;
+      }
+
+      function drawEdge(edge) {
+        const a = nodeById(edge.source);
+        const b = nodeById(edge.target);
+        if (!a || !b) return;
+        const highlighted = edgeHighlighted(edge);
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = edge.kind === "hosts"
+          ? `rgba(199, 150, 255, ${highlighted ? 0.22 : 0.07})`
+          : `rgba(113, 145, 173, ${highlighted ? 0.34 : 0.1})`;
+        ctx.lineWidth = highlighted ? 1.2 : 0.7;
+        ctx.stroke();
+      }
+
+      function drawActivity(event, now, index) {
+        const age = Math.max(0, now - event.occurred_at);
+        if (age > 7) return;
+        const a = nodeById(event.source);
+        const b = nodeById(event.target);
+        if (!a || !b) return;
+        const color = kindColors[event.kind] || colors.green;
+        const life = 1 - age / 7;
+        const flicker = 0.55 + 0.45 * Math.abs(Math.sin(now * 6 + index));
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = Math.max(0.12, life * flicker);
+        ctx.lineWidth = 1.5 + 3 * life;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 16 * life;
+        ctx.stroke();
+
+        const progress = ((now * 0.65 + (index + 1) * 0.19) % 1);
+        const x = a.x + (b.x - a.x) * progress;
+        const y = a.y + (b.y - a.y) * progress;
+        ctx.beginPath();
+        ctx.arc(x, y, 2.2 + life * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.globalAlpha = life;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawNode(node, now) {
+        const selected = node.id === selectedId || node.id === hoveredId;
+        const color = node.kind === "role"
+          ? colors.purple
+          : node.capacity_tier === "strong"
+            ? colors.green
+            : colors.blue;
+        const active = activities.some(
+          (event) => now - event.occurred_at < 7 &&
+            (event.source === node.id || event.target === node.id),
+        );
+        ctx.save();
+        if (selected || active) {
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, node.radius + 8 + (active ? 3 * Math.abs(Math.sin(now * 5)) : 0), 0, Math.PI * 2);
+          ctx.strokeStyle = color;
+          ctx.globalAlpha = selected ? 0.55 : 0.24;
+          ctx.lineWidth = 1.5;
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 14;
+          ctx.stroke();
+        }
+        ctx.globalAlpha = node.online === false ? 0.28 : 1;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = node.is_local ? 20 : 8;
+        ctx.fill();
+        if (node.is_local) {
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, node.radius + 4, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(255,255,255,0.78)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+        ctx.shadowBlur = 0;
+        ctx.font = `${node.kind === "role" ? 11 : 12}px Inter, "Microsoft YaHei", sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = selected ? "#ffffff" : "rgba(225,240,255,0.8)";
+        const label = node.label.length > 28 ? `${node.label.slice(0, 27)}…` : node.label;
+        ctx.fillText(label, node.x, node.y + node.radius + 7);
+        ctx.restore();
+      }
+
+      function frame(timestamp) {
+        const delta = Math.min(2.2, (timestamp - lastFrame) / 16.67);
+        lastFrame = timestamp;
+        const width = canvas.clientWidth || 800;
+        const height = canvas.clientHeight || 600;
+        ctx.clearRect(0, 0, width, height);
+        ctx.save();
+        ctx.translate(panX, panY);
+        ctx.scale(scale, scale);
+        if (nodes.length > 1) simulate(delta);
+        for (const edge of edges) drawEdge(edge);
+        const now = Date.now() / 1000 + clockOffset;
+        activities.forEach((event, index) => drawActivity(event, now, index));
+        for (const node of nodes) drawNode(node, now);
+        ctx.restore();
+        requestAnimationFrame(frame);
+      }
+
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+      applyLanguage();
+      showAuth();
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
