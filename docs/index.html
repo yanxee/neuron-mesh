@@ -138,15 +138,16 @@
           The local <code>/graph</code> view uses an Obsidian-style force simulation.
           Discovery, remote inference and encrypted-storage support create short-lived
           animated pulses on the corresponding relationship line. A browser-generated
-          rehearsal introduces 256 heterogeneous hosts with hardware, compute, Agent roles
+          rehearsal defaults to 256 heterogeneous hosts with hardware, compute, Agent roles
           and cross-domain redundancy. Up to three ingress hosts can request capacity
           at the same time. Each decomposed plan randomly covers 1–40 hosts, then
           asynchronously contacts a random 1–20 host batch with shared-host
           allocations, automatically rebalanced capacity and per-host service
-          deadlines that finish at different times.
+          deadlines that finish at different times. Set <code>demo=fleetN</code>
+          to any supported size from 1 to 2048.
         </p>
         <div class="actions compact-actions">
-          <a class="primary" href="graph-demo.html?demo=fleet256">Launch live demo</a>
+          <a class="primary" href="graph-demo-256-chaos.html?demo=fleet256">Launch live demo</a>
           <a class="secondary" href="https://github.com/yanxee/neuron-mesh/blob/main/docs/TASK_ORCHESTRATION.md">Scheduling design</a>
         </div>
       </div>

@@ -72,7 +72,7 @@ scroll to zoom and select a node to inspect it. Peer announcements, remote
 compute and encrypted-storage support animate the corresponding relationship
 line for a short time.
 
-## 6. Preview a 256-host fleet
+## 6. Preview a configurable fleet
 
 With the node service running, open:
 
@@ -80,15 +80,19 @@ With the node service running, open:
 
 No token is required because this route creates deterministic synthetic data in
 the browser and never writes it to the node database. The animation introduces
-256 heterogeneous hosts in sequence. Select any host to inspect its CPU, memory,
+The default example introduces 256 heterogeneous hosts in sequence. Change
+`fleet256` to `fleet50`, `fleet186`, `fleet543` or another supported `fleetN`
+value; `demo=N` is also accepted. The current range is 1–2048 hosts. Select any
+host to inspect its CPU, memory,
 accelerator, storage, network, compute estimate, capability tags, failure domain
 and two cross-domain redundancy peers. Purple diamond nodes represent the Agent
 hosted on each machine. This is a visual rehearsal, not evidence of 256 physical
 nodes or pledged capacity.
 
-The first 256-host layout intentionally uses a chaos-first cloud instead of
+The current layout intentionally uses a chaos-first cloud instead of
 rings, grids or domain grouping. Per-host target points and off-screen entry
-vectors are randomized per run. Failure-domain metadata remains visible in host
+vectors are randomized per run. Large fleets use sampled repulsion, dynamic
+scaling and label thinning to keep the browser responsive. Failure-domain metadata remains visible in host
 details but does not influence this layout yet; a grouped view can be added as a
 separate mode later.
 
