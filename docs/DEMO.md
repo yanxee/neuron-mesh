@@ -91,10 +91,12 @@ nodes or pledged capacity.
 
 The current layout intentionally uses a chaos-first cloud instead of
 rings, grids or domain grouping. Per-host target points and off-screen entry
-vectors are randomized per run. Large fleets use sampled repulsion, dynamic
-scaling and label thinning to keep the browser responsive. Failure-domain metadata remains visible in host
-details but does not influence this layout yet; a grouped view can be added as a
-separate mode later.
+vectors are randomized per run. During the animation, each host is pulled only
+toward its own random home point; inter-host repulsion and relationship-line
+springs are disabled so the final result cannot collapse back into a ring. Large
+fleets also use dynamic scaling and label thinning. Failure-domain metadata
+remains visible in host details but does not influence this layout yet; a grouped
+view can be added as a separate mode later.
 
 After the fleet is assembled, a cyan task hub appears. The demo cycles through
 five objectives such as long-context research, multimodal understanding,
