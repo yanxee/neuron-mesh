@@ -716,6 +716,7 @@
       let coverageDeck = [];
       let coverageCursor = 0;
       let coverageRandomState = 0x9e3779b9;
+      let layoutSeed = 0x85ebca6b;
 
       const canvas = document.getElementById("graphCanvas");
       const ctx = canvas.getContext("2d");
@@ -1174,6 +1175,7 @@
             id: hostId,
             node_id: `demo-${i + 1}`,
             host_index: i,
+            region_index: regionIndex,
             kind: "host",
             label,
             is_local: i === 0,
@@ -1262,14 +1264,32 @@
         };
       }
 
-      function demoSpawnPosition(index) {
+      function seededUnit(salt) {
+        const value = Math.sin((layoutSeed + salt * 97) * 12.9898) * 43758.5453;
+        return value - Math.floor(value);
+      }
+
+      function demoHomePosition(index) {
         const width = canvas.clientWidth || 800;
         const height = canvas.clientHeight || 600;
-        const angle = index * 2.399963229728653;
-        const radius = Math.max(width, height) * (0.52 + (index % 5) * 0.035);
         return {
-          x: width / 2 + Math.cos(angle) * radius,
-          y: height / 2 + Math.sin(angle) * radius,
+          x: width * (0.1 + seededUnit(index + 101) * 0.8),
+          y: height * (0.12 + seededUnit(index + 211) * 0.74),
+        };
+      }
+
+      function demoSpawnPosition(index, home) {
+        const width = canvas.clientWidth || 800;
+        const height = canvas.clientHeight || 600;
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const angle =
+          Math.atan2(home.y - centerY, home.x - centerX) +
+          (seededUnit(index + 307) - 0.5) * 1.3;
+        const distance = Math.max(width, height) * (0.58 + seededUnit(index + 401) * 0.16);
+        return {
+          x: centerX + Math.cos(angle) * distance,
+          y: centerY + Math.sin(angle) * distance,
         };
       }
 
@@ -1570,17 +1590,10 @@
       function chooseTaskPosition() {
         const width = canvas.clientWidth || 800;
         const height = canvas.clientHeight || 600;
-        const candidates = [
-          [0.18, 0.22],
-          [0.5, 0.17],
-          [0.82, 0.22],
-          [0.18, 0.55],
-          [0.5, 0.52],
-          [0.82, 0.55],
-          [0.2, 0.82],
-          [0.5, 0.82],
-          [0.82, 0.82],
-        ];
+        const candidates = Array.from({ length: 48 }, () => [
+          0.1 + demoRandom() * 0.8,
+          0.14 + demoRandom() * 0.74,
+        ]);
         const anchors = nodes.filter(
           (node) => node.kind === "host" || node.kind === "task",
         );
@@ -1720,11 +1733,14 @@
         const sourceHost = demoPlan.hosts[index];
         const sourceRole = demoPlan.roles[index];
         const now = Date.now() / 1000 + clockOffset;
-        const spawn = demoSpawnPosition(index);
+        const home = demoHomePosition(index);
+        const spawn = demoSpawnPosition(index, home);
         const host = {
           ...sourceHost,
           x: spawn.x,
           y: spawn.y,
+          home_x: home.x,
+          home_y: home.y,
           vx: 0,
           vy: 0,
           radius: radiusForNode(sourceHost),
@@ -1897,6 +1913,7 @@
         coverageDeck = [];
         coverageCursor = 0;
         coverageRandomState = (Date.now() ^ Math.imul(demoGeneration, 2654435761)) >>> 0;
+        layoutSeed = (Date.now() ^ Math.imul(demoGeneration + 7, 2246822519)) >>> 0;
         demoPlan = buildFleetPlan();
         clockOffset = 0;
         scale = 1;
@@ -2350,8 +2367,11 @@
         const repulsion = veryDense ? 900 : dense ? 2850 : 6200;
         const forceNodes = nodes.filter((node) => node.kind !== "role");
         for (const node of nodes) {
-          node.fx = (centerX - node.x) * (veryDense ? 0.00038 : dense ? 0.00024 : 0.00018);
-          node.fy = (centerY - node.y) * (veryDense ? 0.00038 : dense ? 0.00024 : 0.00018);
+          const anchorX = node.home_x ?? centerX;
+          const anchorY = node.home_y ?? centerY;
+          const anchorStrength = veryDense ? 0.00075 : dense ? 0.00042 : 0.00022;
+          node.fx = (anchorX - node.x) * anchorStrength;
+          node.fy = (anchorY - node.y) * anchorStrength;
         }
         for (let i = 0; i < forceNodes.length; i += 1) {
           for (let j = i + 1; j < forceNodes.length; j += 1) {

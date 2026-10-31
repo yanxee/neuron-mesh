@@ -29,6 +29,7 @@ This release is not a complete implementation of the architecture baseline.
 - [x] versioned interface inventory;
 - [x] architecture threat model and residual-risk register;
 - [x] observable quality scenarios and architecture-gated roadmap.
+- [ ] add an optional failure-domain/group clustering mode for the 256-node visualization.
 
 ## v0.3.0 — Architecture and trust baseline
 
