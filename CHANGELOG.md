@@ -7,6 +7,8 @@
 - Add the target system architecture, state-ownership and failure contracts, versioned interface inventory, threat model, quality scenarios and architecture-gated roadmap.
 - Publish English and Simplified Chinese editions of public documentation, website pages, GitHub forms and research material.
 - Add an Obsidian-style live graph for hosts, virtual roles and short-lived cross-node activity.
+- Add a deterministic 50-host fleet-join visualization with hardware, compute,
+  capability, Agent-role and cross-failure-domain redundancy details.
 
 ## 0.2.0 - 2026-10-30
 

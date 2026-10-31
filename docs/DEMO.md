@@ -72,3 +72,17 @@ scroll to zoom and select a node to inspect it. Peer announcements, remote
 compute and encrypted-storage support animate the corresponding relationship
 line for a short time.
 
+## 6. Preview a 50-host fleet
+
+With the node service running, open:
+
+<http://127.0.0.1:8000/graph?demo=fleet50>
+
+No token is required because this route creates deterministic synthetic data in
+the browser and never writes it to the node database. The animation introduces
+50 heterogeneous hosts in sequence. Select any host to inspect its CPU, memory,
+accelerator, storage, network, compute estimate, capability tags, failure domain
+and two cross-domain redundancy peers. Purple diamond nodes represent the Agent
+hosted on each machine. This is a visual rehearsal, not evidence of 50 physical
+nodes or pledged capacity.
+
