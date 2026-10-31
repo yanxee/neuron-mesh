@@ -79,8 +79,8 @@ With the node service running, open:
 <http://127.0.0.1:8000/graph?demo=fleet256>
 
 No token is required because this route creates deterministic synthetic data in
-the browser and never writes it to the node database. The animation introduces
-The default example introduces 256 heterogeneous hosts in sequence. Change
+the browser and never writes it to the node database. The default example
+introduces 256 heterogeneous hosts in sequence. Change
 `fleet256` to `fleet50`, `fleet186`, `fleet543` or another supported `fleetN`
 value; `demo=N` is also accepted. The current range is 1–2048 hosts. Select any
 host to inspect its CPU, memory,
@@ -89,14 +89,18 @@ and two cross-domain redundancy peers. Purple diamond nodes represent the Agent
 hosted on each machine. This is a visual rehearsal, not evidence of 256 physical
 nodes or pledged capacity.
 
-The current layout intentionally uses a chaos-first cloud instead of
-rings, grids or domain grouping. Per-host target points and off-screen entry
-vectors are randomized per run. During the animation, each host is pulled only
-toward its own random home point; inter-host repulsion and relationship-line
-springs are disabled so the final result cannot collapse back into a ring. Large
-fleets also use dynamic scaling and label thinning. Failure-domain metadata
-remains visible in host details but does not influence this layout yet; a grouped
-view can be added as a separate mode later.
+The current layout intentionally uses a hash-mixed chaos cloud instead of rings,
+grids or domain grouping. Each host receives an independent target inside a
+broad rectangle, warped by several random cluster centers to preserve irregular
+density and holes. A joining host starts a short distance from its target and
+moves into place; it does not travel from a shared perimeter. Inter-host
+repulsion and relationship-line springs are disabled so the final result cannot
+collapse back into a ring. Large fleets also use dynamic scaling and label
+thinning. Above 256 hosts, selection focuses structural edges; above 600 hosts,
+the renderer lowers its frame rate and backing-buffer resolution to keep the
+page responsive. Failure-domain metadata remains visible in host details but does
+not influence this layout yet; a grouped view can be added as a separate mode
+later.
 
 After the fleet is assembled, a cyan task hub appears. The demo cycles through
 five objectives such as long-context research, multimodal understanding,

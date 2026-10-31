@@ -110,8 +110,9 @@ Architecture documents:
 - `status`/`drain` CLI commands and `/readyz`;
 - two-node Docker Compose, tests and GitHub Actions CI.
 - Obsidian-style live graph of hosts, virtual roles and node-to-node activity;
-- a configurable 1–2048 host join animation with a chaos-first cloud layout while
-  retaining failure-domain metadata for a future grouped view;
+- a configurable 1–2048 host join animation with a hash-mixed irregular cloud,
+  near-home insertion motion and failure-domain metadata retained for a future
+  grouped view;
 - task-driven asynchronous dispatch with random coverage from 1 to 40 hosts and
   visible per-host subtask assignment across failure domains;
 - up to three simultaneous ingress-host resource requests with proportional
@@ -169,7 +170,7 @@ Change `fleet256` to another supported size, such as `fleet50`, `fleet186` or
 The same browser-only demo is published at
 <https://yanxee.github.io/neuron-mesh/graph-demo.html?demo=fleet256>.
 Use the cache-safe URL
-<https://yanxee.github.io/neuron-mesh/graph-demo-256-chaos.html?demo=fleet256&v=chaos3>
+<https://yanxee.github.io/neuron-mesh/graph-demo-256-chaos.html?demo=fleet256&v=chaos11>
 after layout updates.
 The rehearsal also cycles through five task objectives and randomly covers between
 1 and 40 hosts for each decomposed plan. Each asynchronous batch contacts a random

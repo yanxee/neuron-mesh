@@ -137,13 +137,14 @@
           计划随机覆盖 1–40 台主机，再以随机 1–20 台为一个异步批次进行调用，
           并展示共享主机分配、自动再平衡，以及每个主机独立计算、结束时间不同的
           通信服务窗口。可通过 <code>demo=fleetN</code> 设置 1–2048 台之间的任意主机数。
+          初始视图采用哈希混合的不规则云团，域/组归类保留为后续可选模式。
         </p>
         <div class="actions compact-actions">
-          <a class="primary" href="../graph-demo-256-chaos.html?demo=fleet256&v=chaos3">打开实时演示</a>
+          <a class="primary" href="../graph-demo-256-chaos.html?demo=fleet256&v=chaos11">打开实时演示</a>
           <a class="secondary" href="https://github.com/yanxee/neuron-mesh/blob/main/docs/TASK_ORCHESTRATION.zh-CN.md">调度实现原理</a>
         </div>
       </div>
-      <img class="graph-preview" src="../assets/fleet256-dashboard.png" alt="NeuronMesh 256 节点关系图，显示多入口并发申请和主机独立服务时长">
+      <img class="graph-preview" src="../assets/fleet256-dashboard.png" alt="NeuronMesh 256 节点混沌云关系图，显示多入口并发申请和主机独立服务时长">
     </section>
 
     <section class="research">

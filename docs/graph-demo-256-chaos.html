@@ -706,6 +706,7 @@
       let dragMoved = false;
       let dragStart = null;
       let lastFrame = performance.now();
+      let lastRenderedAt = 0;
       let pollTimer = null;
       let clockOffset = 0;
       let demoTimers = [];
@@ -723,6 +724,8 @@
       let coverageCursor = 0;
       let coverageRandomState = 0x9e3779b9;
       let layoutSeed = 0x85ebca6b;
+      let renderActiveNodeIds = new Set();
+      let renderAllocationCounts = new Map();
 
       const canvas = document.getElementById("graphCanvas");
       const ctx = canvas.getContext("2d");
@@ -780,7 +783,12 @@
 
       function resizeCanvas() {
         const rect = canvas.getBoundingClientRect();
-        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const ratio =
+          demoMode && demoHostCount > 1200
+            ? 1
+            : demoMode && demoHostCount > 600
+              ? 1.15
+              : Math.min(window.devicePixelRatio || 1, 2);
         canvas.width = Math.max(1, Math.floor(rect.width * ratio));
         canvas.height = Math.max(1, Math.floor(rect.height * ratio));
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -1283,31 +1291,45 @@
       }
 
       function seededUnit(salt) {
-        const value = Math.sin((layoutSeed + salt * 97) * 12.9898) * 43758.5453;
-        return value - Math.floor(value);
+        let value = (layoutSeed ^ Math.imul((salt + 1) >>> 0, 0x9e3779b1)) >>> 0;
+        value ^= value >>> 16;
+        value = Math.imul(value, 0x7feb352d);
+        value ^= value >>> 15;
+        value = Math.imul(value, 0x846ca68b);
+        value ^= value >>> 16;
+        return (value >>> 0) / 4294967296;
       }
 
       function demoHomePosition(index) {
         const width = canvas.clientWidth || 800;
         const height = canvas.clientHeight || 600;
+        const broadX = 0.08 + seededUnit(index * 2 + 101) * 0.84;
+        const broadY = 0.1 + seededUnit(index * 2 + 211) * 0.8;
+        const clusterCount = demoHostCount > 600 ? 11 : 7;
+        const clusterIndex = Math.floor(seededUnit(index + 503) * clusterCount);
+        const clusterX =
+          0.14 +
+          seededUnit(clusterIndex * 2 + 601) * 0.72 +
+          (seededUnit(index * 3 + 701) - 0.5) * 0.32;
+        const clusterY =
+          0.14 +
+          seededUnit(clusterIndex * 2 + 602) * 0.72 +
+          (seededUnit(index * 3 + 809) - 0.5) * 0.32;
+        const clusterPull = seededUnit(index + 907) * 0.52;
         return {
-          x: width * (0.1 + seededUnit(index + 101) * 0.8),
-          y: height * (0.12 + seededUnit(index + 211) * 0.74),
+          x: width * Math.max(0.055, Math.min(0.945, broadX * (1 - clusterPull) + clusterX * clusterPull)),
+          y: height * Math.max(0.065, Math.min(0.935, broadY * (1 - clusterPull) + clusterY * clusterPull)),
         };
       }
 
       function demoSpawnPosition(index, home) {
         const width = canvas.clientWidth || 800;
         const height = canvas.clientHeight || 600;
-        const centerX = width / 2;
-        const centerY = height / 2;
-        const angle =
-          Math.atan2(home.y - centerY, home.x - centerX) +
-          (seededUnit(index + 307) - 0.5) * 1.3;
-        const distance = Math.max(width, height) * (0.58 + seededUnit(index + 401) * 0.16);
+        const angle = seededUnit(index + 307) * Math.PI * 2;
+        const distance = 16 + seededUnit(index + 401) * 58;
         return {
-          x: centerX + Math.cos(angle) * distance,
-          y: centerY + Math.sin(angle) * distance,
+          x: Math.max(0, Math.min(width, home.x + Math.cos(angle) * distance)),
+          y: Math.max(0, Math.min(height, home.y + Math.sin(angle) * distance * 0.72)),
         };
       }
 
@@ -2617,6 +2639,7 @@
       function drawNode(node, now) {
         if (node.reveal_at && node.reveal_at > now) return;
         const selected = node.id === selectedId || node.id === hoveredId;
+        const lightweight = demoMode && demoHostCount > 256;
         const color = node.kind === "task"
           ? colors.cyan
           : node.kind === "role"
@@ -2626,17 +2649,9 @@
               : node.capacity_tier === "balanced"
                 ? colors.blue
                 : colors.orange;
-        const active = activities.some(
-          (event) => {
-            const duration = event.duration || activityDuration(event.kind);
-            if (now - event.occurred_at >= duration) return false;
-            const targets = event.targets || [event.target];
-            return event.source === node.id || targets.includes(node.id);
-          },
-        );
-        const allocationCount = node.kind === "host"
-          ? demoAssignmentsForHost(node.id).length
-          : 0;
+        const active = renderActiveNodeIds.has(node.id);
+        const allocationCount =
+          node.kind === "host" ? renderAllocationCounts.get(node.id) || 0 : 0;
         const joinAge = node.joined_at == null ? Infinity : Math.max(0, now - node.joined_at);
         const joinEase = Math.min(1, joinAge / 0.72);
         const appear = 1 - Math.pow(1 - joinEase, 3);
@@ -2656,7 +2671,7 @@
           ctx.globalAlpha = (1 - wave) * 0.62;
           ctx.lineWidth = 1.4;
           ctx.shadowColor = color;
-          ctx.shadowBlur = 18;
+          ctx.shadowBlur = lightweight ? 0 : 18;
           ctx.stroke();
         }
         if (selected || active) {
@@ -2666,7 +2681,7 @@
           ctx.globalAlpha = selected ? 0.55 : 0.24;
           ctx.lineWidth = 1.5;
           ctx.shadowColor = color;
-          ctx.shadowBlur = 14;
+          ctx.shadowBlur = lightweight ? 5 : 14;
           ctx.stroke();
         }
         if (allocationCount > 1) {
@@ -2694,7 +2709,7 @@
         ctx.globalAlpha = (node.online === false ? 0.28 : 1) * Math.max(0.2, appear);
         ctx.fillStyle = color;
         ctx.shadowColor = color;
-        ctx.shadowBlur = node.is_local ? 20 : 8;
+        ctx.shadowBlur = lightweight ? 0 : node.is_local ? 20 : 8;
         if (node.kind === "task") {
           ctx.beginPath();
           for (let side = 0; side < 6; side += 1) {
@@ -2809,6 +2824,19 @@
       }
 
       function frame(timestamp) {
+        requestAnimationFrame(frame);
+        const minimumFrameGap =
+          demoMode && demoHostCount > 1200
+            ? 70
+            : demoMode && demoHostCount > 600
+              ? 50
+              : demoMode && demoHostCount > 256
+                ? 34
+                : 0;
+        if (minimumFrameGap && timestamp - lastRenderedAt < minimumFrameGap) {
+          return;
+        }
+        lastRenderedAt = timestamp;
         const delta = Math.min(2.2, (timestamp - lastFrame) / 16.67);
         lastFrame = timestamp;
         const width = canvas.clientWidth || 800;
@@ -2819,12 +2847,44 @@
         ctx.translate(panX, panY);
         ctx.scale(scale, scale);
         if (nodes.length > 1 && !simulationPaused) simulate(delta);
-        for (const edge of edges) drawEdge(edge);
         const now = Date.now() / 1000 + clockOffset;
+        renderActiveNodeIds.clear();
+        renderAllocationCounts.clear();
+        for (const event of activities) {
+          const duration = event.duration || activityDuration(event.kind);
+          if (now - event.occurred_at >= duration) continue;
+          renderActiveNodeIds.add(event.source);
+          (event.targets || [event.target]).forEach((id) => {
+            if (id) renderActiveNodeIds.add(id);
+          });
+        }
+        for (const task of activeDemoTasks()) {
+          task.assignments.forEach((assignment) => {
+            renderAllocationCounts.set(
+              assignment.host_id,
+              (renderAllocationCounts.get(assignment.host_id) || 0) + 1,
+            );
+          });
+        }
+        for (const edge of edges) {
+          const structuralEdge =
+            edge.kind === "hosts" ||
+            edge.kind === "peer" ||
+            edge.kind === "backup";
+          if (
+            demoMode &&
+            demoHostCount > 256 &&
+            selectedId &&
+            structuralEdge &&
+            !edgeHighlighted(edge)
+          ) {
+            continue;
+          }
+          drawEdge(edge);
+        }
         activities.forEach((event, index) => drawActivity(event, now, index));
         for (const node of nodes) drawNode(node, now);
         ctx.restore();
-        requestAnimationFrame(frame);
       }
 
       window.addEventListener("resize", resizeCanvas);

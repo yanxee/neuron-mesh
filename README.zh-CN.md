@@ -71,8 +71,8 @@ NeuronMesh 关注的不是再包装一个聊天 API，而是探索大模型基�
 - `status`/`drain` 运维命令和 `/readyz` 就绪探测；
 - 双节点 Docker Compose、本地测试和 GitHub Actions CI。
 - 类似 Obsidian 的主机、虚拟角色与跨节点活动实时关系图；
-- 可配置 1–2048 台虚拟主机的加入动画，当前采用混沌云布局并保留故障域元数据，
-  为后续域/组视图预留能力；
+- 可配置 1–2048 台虚拟主机的加入动画，当前采用哈希混合的不规则混沌云和近目标
+  加入运动，并保留故障域元数据，为后续域/组视图预留能力；
 - 根据计算目标动态拆解任务，随机覆盖 1 至 40 台异构主机，并按批次异步分配算力；
 - 最多 3 个入口主机同时申请资源，显示比例算力份额、共享租约和自动再平衡；
 - SQLite 持久化协调调度器与 `/v1/tasks` 接口，支持能力感知的主机选择、
@@ -182,7 +182,7 @@ API 文档：<http://127.0.0.1:8000/docs>
 同一套浏览器演示已发布到
 <https://yanxee.github.io/neuron-mesh/graph-demo.html?demo=fleet256>。
 布局更新后请使用带版本、可绕过旧缓存的新地址：
-<https://yanxee.github.io/neuron-mesh/graph-demo-256-chaos.html?demo=fleet256&v=chaos3>。
+<https://yanxee.github.io/neuron-mesh/graph-demo-256-chaos.html?demo=fleet256&v=chaos11>。
 演示会在五类计算目标之间轮换，并为每次任务随机覆盖 1 至 40 台主机。任务
 每次会同时联系随机 1–20 台当前批次主机。每台主机的服务时长根据主机算力、
 获批份额和阶段负载独立计算，因此慢速或低份额主机会保持更久，快速主机会更早

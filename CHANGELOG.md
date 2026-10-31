@@ -17,10 +17,13 @@
   `/v1/tasks` create/list/detail APIs.
 - Add shuffled 1–40 host coverage plans with bundled low-resource stages and
   sharded high-coverage stages.
-- Replace the regular 256-node radial layout with a chaos-first host cloud,
-  independent off-screen entry vectors and zoom-dependent label sampling.
+- Replace the regular 256-node radial layout with a hash-mixed, irregular host
+  cloud and near-home entry vectors; retain zoom-dependent label sampling.
 - Allow `demo=fleetN` and `demo=N` to configure 1–2048 hosts with adaptive join
-  timing, random home springs, dynamic scaling and label thinning.
+  timing, random target points, dynamic scaling and label thinning.
+- Add adaptive rendering for large fleets: lower frame rates and backing-buffer
+  resolution, cached per-frame activity indexes, and selection-focused structural
+  edges.
 - Add random 1–20-host concurrency windows with independent per-host service
   duration, staggered completion and just-in-time slot refill.
 
