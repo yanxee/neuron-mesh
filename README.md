@@ -166,6 +166,9 @@ Open <http://127.0.0.1:8000/graph?demo=fleet256> for a browser-generated 256-hos
 fleet rehearsal. This visual simulation does not claim that 256 real nodes exist.
 The same browser-only demo is published at
 <https://yanxee.github.io/neuron-mesh/graph-demo.html?demo=fleet256>.
+Use the cache-safe URL
+<https://yanxee.github.io/neuron-mesh/graph-demo-256-chaos.html?demo=fleet256>
+after layout updates.
 The rehearsal also cycles through five task objectives and randomly covers between
 1 and 40 hosts for each decomposed plan. Each asynchronous batch contacts a random
 1–20 hosts at once. Every call keeps its own service deadline derived from host

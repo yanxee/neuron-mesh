@@ -97,4 +97,6 @@ def test_public_graph_demo_matches_packaged_dashboard() -> None:
     root = Path(__file__).resolve().parents[1]
     packaged = (root / "neuron_mesh" / "graph.html").read_bytes()
     public_demo = (root / "docs" / "graph-demo.html").read_bytes()
+    versioned_demo = (root / "docs" / "graph-demo-256-chaos.html").read_bytes()
     assert public_demo == packaged
+    assert versioned_demo == packaged

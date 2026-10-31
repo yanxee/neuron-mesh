@@ -179,6 +179,8 @@ API 文档：<http://127.0.0.1:8000/docs>
 伪造真实在线节点或资源承诺。
 同一套浏览器演示已发布到
 <https://yanxee.github.io/neuron-mesh/graph-demo.html?demo=fleet256>。
+布局更新后请使用带版本、可绕过旧缓存的新地址：
+<https://yanxee.github.io/neuron-mesh/graph-demo-256-chaos.html?demo=fleet256>。
 演示会在五类计算目标之间轮换，并为每次任务随机覆盖 1 至 40 台主机。任务
 每次会同时联系随机 1–20 台当前批次主机。每台主机的服务时长根据主机算力、
 获批份额和阶段负载独立计算，因此慢速或低份额主机会保持更久，快速主机会更早
